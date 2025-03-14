@@ -1,17 +1,20 @@
 import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
-import Navigation from './components/navigation';
-import Footer from "./components/footer"; 
-import { BrowserRouter } from 'react-router-dom'
+
+import Layout from './components/layout'
+import Login_welcome_page from './components/login_welcome_page';
 
 function App() {
   
   return (
     
     <BrowserRouter>
-      <Navigation />
-      <main />
-      <Footer />
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Login_welcome_page />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
           
   );

@@ -1,4 +1,16 @@
 
+#root{
+  background-image: url("background2.jpg");
+  background-size: cover; 
+}
+
+@media (min-width: 1200px) {
+  #root {
+    background-image: url("background.jpg");
+    background-size: cover;
+  }
+}
+
 
 
 footer{
@@ -13,6 +25,12 @@ footer{
 }
 
 
+
+
+
+.card{
+  background-color: rgba(254, 245, 239, 0.75);
+}
 
 .navbar{
   background-color: rgba(240, 240, 240, 1)
