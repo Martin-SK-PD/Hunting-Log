@@ -1,4 +1,4 @@
-
+import Announcement_card from "./announcement";
 
 function Visits_log(){
   
@@ -6,26 +6,7 @@ function Visits_log(){
     <div className="container-fluid">
       <div className="row">
         <div className="col-lg-4 order-lg-2">
-        
-        <div className="card my-md-3 m-3 p-2 text-center h-100">
-          <div className="card-title pt-2">
-            <h4 className="text-center font-weight-bold m-2">Oznamy</h4>
-          </div>
-          <div className="card-body">
-          <ul className="list-group pt-2">
-            <li className="list-group-item mt-2">🔧 Stránka je vo vývoji 🔧</li>
-            <li className="list-group-item mt-2">
-              Lov zvere: <br />
-              Lov všetkých zverý je momentálne zakázaný!
-            </li>
-            <li className="list-group-item mt-2">
-              Polovnícky ples: <br />
-              V sobotu 22.3.2025 o 19:00 v kultúrnom dome sa bude konať polovnícky ples.
-            </li>
-          </ul>
-          </div>
-        </div>
-        
+         <Announcement_card />
         </div>
 
         <div className="col-lg-8 order-lg-1">
