@@ -21,10 +21,10 @@ function Navigation(){
                             <Link className="nav-link" to="/">Domov</Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link" to="/">Zoznam návštev</Link>
+                            <Link className="nav-link" to="/navstevy">Zoznam návštev</Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link" to="/">Úlovky</Link>
+                            <Link className="nav-link" to="/ulovky">Úlovky</Link>
                         </li>
                     </ul>  
 
