@@ -1,0 +1,19 @@
+
+
+
+footer{
+  position: relative;
+}
+
+
+#root{
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+
+
+.navbar{
+  background-color: rgba(240, 240, 240, 1)
+}
