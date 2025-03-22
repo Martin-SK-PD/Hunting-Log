@@ -13,6 +13,7 @@ app.use(express.json());
 
 
 app.use("/register", registerRoute);
+app.use("/login", loginRoute);
 
 app.get("/", (req, res) => {
     res.send("Server is running!");
