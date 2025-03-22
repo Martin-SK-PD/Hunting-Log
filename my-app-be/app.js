@@ -3,7 +3,7 @@ import cors from "cors";
 import logger from "morgan";
 
 import registerRoute from "./routes/register.js"
-import loginRoute from "./routes/register.js"
+import loginRoute from "./routes/login.js"
 import verifyRoute from "./routes/verify.js"
 
 const app = express();
