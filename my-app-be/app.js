@@ -7,6 +7,9 @@ import loginRoute from "./routes/login.js"
 import verifyRoute from "./routes/verify.js"
 
 import visitsRouter from "./routes/api_v1/visits.js";
+import huntingRecordsRouter from "./routes/api_v1/huntingRecords.js";
+
+import areaRoutes from "./routes/api_v1/areas.js";
 
 const app = express();
 
@@ -20,6 +23,9 @@ app.use("/login", loginRoute);
 app.use("/verify", verifyRoute); 
 
 app.use("/api/v1/visits", visitsRouter);
+app.use("/api/v1/hunting-records", huntingRecordsRouter);
+
+app.use("/api/v1/areas", areaRoutes);
 
 app.get("/", (req, res) => {
     res.send("Server is running!");

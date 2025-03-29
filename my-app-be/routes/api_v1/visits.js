@@ -1,6 +1,6 @@
 import express from "express";
 import verifyToken from "../../middleware/verifyToken.js";
-import { getVisitsByUser, createVisitWithChecks, updateVisitWithChecks, getLastVisit, getPlannedVisits } from "../../models/visits.js";
+import { getVisitsByUser, createVisitWithChecks, updateVisitWithChecks} from "../../models/visits.js";
 
 const router = express.Router();
 
