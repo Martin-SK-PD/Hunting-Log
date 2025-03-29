@@ -25,6 +25,17 @@ footer{
 }
 
 
+.card.scrollable-card {
+  max-height: calc(100vh - 150px); 
+  display: flex;
+  flex-direction: column;
+}
+
+.card.scrollable-card .card-body  {
+  overflow-y: auto;
+}
+
+
 
 
 

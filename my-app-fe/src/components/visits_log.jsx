@@ -1,76 +1,102 @@
-import Announcement_card from "./announcement";
+import { useEffect, useState } from "react";
+import VisitsTable from "./visits_table";
+import CenteredModal from "./centered_modal";
+import AddVisitForm from "./add_visit_form";
+import AddHuntingRecordForm from "./add_hunting_record_form";
 
-function Visits_log(){
-  
+function Visits_log() {
+  const [visits, setVisits] = useState([]);
+  const [showVisitModal, setShowVisitModal] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState(null);
+  const [editingVisit, setEditingVisit] = useState(null); 
+
+  const fetchVisits = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/api/v1/visits", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (!res.ok) throw new Error("Chyba pri načítaní návštev");
+      const data = await res.json();
+      setVisits(data);
+    } catch (err) {
+      console.error("Chyba:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchVisits();
+    const interval = setInterval(fetchVisits, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleHuntingRecordSave = async () => {
+    setSelectedVisit(null);
+    await fetchVisits();
+  };
+
   return (
     <div className="container-fluid">
       <div className="row">
-        <div className="col-lg-4 order-lg-2">
-         <Announcement_card />
-        </div>
+        <div className="col-lg-12">
+          <div className="card scrollable-card my-md-3 m-3 p-2">
+            <div className="card-title px-3 pt-2">
+              <div className="row">
+                <div className="col-12 col-md-9">
+                  <h4 className="text-start font-weight-bold m-2">Záznamy o návštevách</h4>
+                </div>
+                <div className="col-12 col-md-3 text-md-end">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => { setEditingVisit(null); setShowVisitModal(true);  }} >
+                    + Nová návšteva
+                  </button>
+                </div>
+              </div>
+            </div>
 
-        <div className="col-lg-8 order-lg-1">
-
-        <div className="card my-md-3 m-3 p-2 h-100">
-          <div className="card-title px-3 pt-2">
-            <h4 className="text-start font-weight-bold m-2">Záznamy zo dňa: 13.3.2025 </h4>
+            <div className="card-body">
+              <VisitsTable
+                visits={visits}
+                onAddHuntingRecord={(visit) => setSelectedVisit(visit)}
+                onEditVisit={(visit) => {
+                  setEditingVisit(visit);
+                  setShowVisitModal(true);
+                }}
+              />
+            </div>
           </div>
-
-
-          <div className="card-body">
-                             
-          <table className="table table-striped table-hover text-center">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Meno</th>
-                <th scope="col">Oblasť</th>
-                <th scope="col">Miesto/Štruktúra</th>
-                <th scope="col">Akcia</th>
-                <th scope="col">Čas príchodu</th>
-                <th scope="col">Čas odchodu</th>    
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">1</th>
-                <td>Košovský M.</td>
-                <td>Nad Lubínom</td>
-                <td>-</td>
-                <td>Pochodzka</td>
-                <td>14:00</td>
-                <td>15:30</td>
-              </tr>
-                              
-              <tr>
-                <th scope="row">2</th>
-                <td>Tručka M.</td>
-                <td>Medziriečie</td>
-                <td>Posed pod lesom</td>
-                <td>Lov</td>
-                <td>21:30</td>
-                <td>23:45</td>
-              </tr>
-
-              <tr>
-                <th scope="row">3</th>
-                <td>Košovský M.</td>
-                <td>Čúrová</td>
-                <td>Nový krmelec</td>
-                <td>Prikrmovanie</td>
-                <td>6:30</td>
-                <td>7:30</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
+
+      <CenteredModal
+        show={showVisitModal}
+        onClose={() => setShowVisitModal(false)}
+        title={editingVisit ? "Upraviť návštevu" : "Nová návšteva"}
+      >
+        <AddVisitForm
+          initialData={editingVisit}
+          onSave={() => {
+            fetchVisits();
+            setShowVisitModal(false);
+            setEditingVisit(null);
+          }}
+        />
+      </CenteredModal>
+
+      <CenteredModal
+        show={!!selectedVisit}
+        onClose={() => setSelectedVisit(null)}
+        title="Pridať úlovok"
+      >
+        <AddHuntingRecordForm
+          visit={selectedVisit}
+          onSave={handleHuntingRecordSave}
+        />
+      </CenteredModal>
     </div>
-  </div>
-  </div>
   );
 }
 
-
-            
-export default Visits_log
+export default Visits_log;
