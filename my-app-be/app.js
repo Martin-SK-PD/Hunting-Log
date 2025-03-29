@@ -10,6 +10,7 @@ import visitsRouter from "./routes/api_v1/visits.js";
 import huntingRecordsRouter from "./routes/api_v1/huntingRecords.js";
 
 import areaRoutes from "./routes/api_v1/areas.js";
+import structureRoutes from "./routes/api_v1/structures.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/v1/visits", visitsRouter);
 app.use("/api/v1/hunting-records", huntingRecordsRouter);
 
 app.use("/api/v1/areas", areaRoutes);
+app.use("/api/v1/structures", structureRoutes);
 
 app.get("/", (req, res) => {
     res.send("Server is running!");
