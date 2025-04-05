@@ -2,10 +2,16 @@ import pool from "../db.js";
 
 export function getHuntingRecordsByUser(userId) {
   return pool.query(`
-    SELECT hr.id, hr.animal, hr.weight, hr.date_time, 
-           (u.first_name || ' ' || u.last_name) AS hunter_name,
-           a.name AS area_name,
-           s.name AS structure_name
+    SELECT 
+      hr.id, 
+      hr.animal, 
+      hr.weight, 
+      hr.date_time, 
+      (u.first_name || ' ' || u.last_name) AS hunter_name,
+      u.username AS hunter_username,
+      u.id AS hunter_id,                    
+      a.name AS area_name,
+      s.name AS structure_name
     FROM hunting_records hr
     JOIN visits v ON hr.visit_id = v.id
     JOIN users u ON v.hunter_id = u.id
@@ -18,13 +24,17 @@ export function getHuntingRecordsByUser(userId) {
 }
 
 
-export async function validateVisitForHunting(userId, visitId, shotTime) {
-  const result = await pool.query(
-    `SELECT * FROM visits
-     WHERE id = $1 AND hunter_id = $2 AND purpose = 'Lov'
-       AND is_deleted = false`,
-    [visitId, userId]
-  );
+export async function validateVisitForHunting(userId, visitId, shotTime, isAdmin = false) {
+  const query = `
+    SELECT * FROM visits
+    WHERE id = $1
+      ${isAdmin ? "" : "AND hunter_id = $2"}
+      AND purpose = 'Lov'
+      AND is_deleted = false
+  `;
+
+  const params = isAdmin ? [visitId] : [visitId, userId];
+  const result = await pool.query(query, params);
 
   if (result.rowCount === 0) throw new Error("Neplatná návšteva pre úlovok");
 
@@ -36,6 +46,8 @@ export async function validateVisitForHunting(userId, visitId, shotTime) {
   return visit;
 }
 
+
+
 export async function insertHuntingRecord({ visit_id, animal, weight, date_time }) {
   const result = await pool.query(
     `INSERT INTO hunting_records (visit_id, animal, weight, date_time)
@@ -44,4 +56,72 @@ export async function insertHuntingRecord({ visit_id, animal, weight, date_time 
     [visit_id, animal, weight, date_time]
   );
   return result.rows[0];
+}
+
+
+
+export async function softDeleteHuntingRecord(userId, recordId) {
+  return pool.query(`
+    UPDATE hunting_records
+    SET is_deleted = true
+    WHERE id = $1 AND visit_id IN (
+      SELECT v.id
+      FROM visits v
+      JOIN user_hunting_ground u ON u.hunting_ground_id = (SELECT hunting_ground_id FROM user_hunting_ground WHERE user_id = $2)
+      WHERE v.id = hunting_records.visit_id
+    )
+  `, [recordId, userId]);
+}
+
+
+
+export async function updateHuntingRecordWithChecks(userId,recordId, updates) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const recordRes = await client.query(`
+      SELECT hr.*, v.hunter_id, v.id AS visit_id, a.hunting_ground_id
+      FROM hunting_records hr
+      JOIN visits v ON hr.visit_id = v.id
+      JOIN hunting_areas a ON v.hunting_area_id = a.id
+      WHERE hr.id = $1 AND hr.is_deleted = false
+    `, [recordId]);
+
+    if (recordRes.rowCount === 0) throw new Error("Úlovok neexistuje alebo bol vymazaný.");
+
+    const record = recordRes.rows[0];
+
+    const userGroundRes = await client.query(`
+      SELECT role FROM user_hunting_ground
+      WHERE user_id = $1 AND hunting_ground_id = $2
+    `, [userId, record.hunting_ground_id]);
+
+    if (userGroundRes.rowCount === 0) throw new Error("Nemáte oprávnenie meniť tento úlovok.");
+
+    const isAdmin = userGroundRes.rows[0].role === 'Admin';
+
+    if (!isAdmin && record.hunter_id !== userId) {
+      throw new Error("Nemáte oprávnenie upravovať tento úlovok.");
+    }
+
+    await validateVisitForHunting(userId, record.visit_id, new Date(updates.date_time), isAdmin);
+
+    const result = await client.query(`
+      UPDATE hunting_records
+      SET animal = $1,
+          weight = $2,
+          date_time = $3
+      WHERE id = $4
+      RETURNING *
+    `, [updates.animal, updates.weight, updates.date_time, recordId]);
+
+    await client.query("COMMIT");
+    return result.rows[0];
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }

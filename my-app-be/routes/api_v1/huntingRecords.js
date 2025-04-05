@@ -1,6 +1,6 @@
 import express from "express";
 import verifyToken from "../../middleware/verifyToken.js";
-import { getHuntingRecordsByUser, validateVisitForHunting,  insertHuntingRecord, getMonthlyStats, updateHuntingRecordWithChecks,
+import { getHuntingRecordsByUser, validateVisitForHunting,  insertHuntingRecord, updateHuntingRecordWithChecks,  
   softDeleteHuntingRecord } from "../../models/huntingRecords.js";
 
 
