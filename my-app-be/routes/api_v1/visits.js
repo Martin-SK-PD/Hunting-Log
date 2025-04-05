@@ -1,6 +1,7 @@
 import express from "express";
 import verifyToken from "../../middleware/verifyToken.js";
-import { getVisitsByUser, createVisitWithChecks, updateVisitWithChecks} from "../../models/visits.js";
+import { getVisitsByUser, createVisitWithChecks, updateVisitWithChecks, 
+         getLastVisit, getPlannedVisits, softDeleteVisitAndRecords} from "../../models/visits.js";
 
 const router = express.Router();
 
@@ -33,7 +34,7 @@ router.post("/", verifyToken, async (req, res) => {
 router.put("/:id", verifyToken, async (req, res) => {
   const userId = req.user.id;
   const visitId = parseInt(req.params.id, 10);
-  const {start_datetime, structure_id, end_datetime, purpose, notes } = req.body;
+  const { start_datetime, structure_id, end_datetime, purpose, notes } = req.body;
 
   if (!structure_id && structure_id !== null) return res.status(400).json({ msg: "Neplatné ID štruktúry" });
   if (end_datetime && isNaN(new Date(end_datetime))) return res.status(400).json({ msg: "Neplatný čas ukončenia" });
@@ -55,4 +56,17 @@ router.put("/:id", verifyToken, async (req, res) => {
 
 
 
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const success = await softDeleteVisitAndRecords(req.user.id, req.params.id);
+    if (!success) return res.status(403).json({ msg: "Nemáš oprávnenie vymazať túto návštevu." });
+    res.json({ msg: "Návšteva a prípadné úlovky boli vymazané." });
+  } catch (err) {
+    console.error("Chyba pri mazaní návštevy:", err.message);
+    res.status(500).json({ msg: "Chyba servera." });
+  }
+});
+
 export default router;
+
+
