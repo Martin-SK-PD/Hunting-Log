@@ -1,7 +1,7 @@
 import express from "express";
 import verifyToken from "../../middleware/verifyToken.js";
 import { getVisitsByUser, createVisitWithChecks, updateVisitWithChecks, 
-         getLastVisit, getPlannedVisits, softDeleteVisitAndRecords} from "../../models/visits.js";
+        softDeleteVisitAndRecords} from "../../models/visits.js";
 
 const router = express.Router();
 
@@ -53,6 +53,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     res.status(400).json({ msg: err.message });
   }
 });
+
 
 
 

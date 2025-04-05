@@ -80,24 +80,44 @@ export async function createVisitWithChecks(userId, data) {
   }
 }
 
-
 export async function updateVisitWithChecks(userId, visitId, updates) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    
-    const visitRes = await client.query(`
-      SELECT * FROM visits WHERE id = $1 AND hunter_id = $2 AND is_deleted = false
-    `, [visitId, userId]);
+    // zisti revír a rolu používateľa
+    const userGroundRes = await client.query(`
+      SELECT hunting_ground_id, role 
+      FROM user_hunting_ground 
+      WHERE user_id = $1
+    `, [userId]);
 
-    if (visitRes.rowCount === 0) throw new Error("Návšteva neexistuje alebo nie je vaša");
+    if (userGroundRes.rowCount === 0) throw new Error("Používateľ nie je členom žiadneho revíru");
+    const { hunting_ground_id, role } = userGroundRes.rows[0];
+
+    // zisti návštevu
+    const visitRes = await client.query(`
+      SELECT v.*, a.hunting_ground_id 
+      FROM visits v
+      JOIN hunting_areas a ON v.hunting_area_id = a.id
+      WHERE v.id = $1 AND v.is_deleted = false
+    `, [visitId]);
+
+    if (visitRes.rowCount === 0) throw new Error("Návšteva neexistuje alebo bola vymazaná");
 
     const visit = visitRes.rows[0];
 
+    // kontrola oprávnenia
+    if (role !== "Admin" && visit.hunter_id !== userId) {
+      throw new Error("Nemáte oprávnenie upravovať túto návštevu.");
+    }
 
-    // ak existuje úlovok a účel sa mení alebo meníme čas
-    const records = await client.query(`SELECT * FROM hunting_records WHERE visit_id = $1 AND is_deleted = false`, [visitId]);
+    // kontrola - ak existuje úlovok a účel sa mení alebo meníme čas
+    const records = await client.query(`
+      SELECT * FROM hunting_records 
+      WHERE visit_id = $1 AND is_deleted = false
+    `, [visitId]);
+
     if (records.rowCount > 0) {
       const shotTimes = records.rows.map(r => new Date(r.date_time));
       const minShot = new Date(Math.min(...shotTimes));
@@ -105,7 +125,9 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
 
       if (
         updates.end_datetime &&
-        (new Date(visit.start_datetime) > new Date(updates.end_datetime) || new Date(updates.end_datetime) < minShot || new Date(updates.end_datetime) < maxShot)
+        (new Date(visit.start_datetime) > new Date(updates.end_datetime) ||
+         new Date(updates.end_datetime) < minShot ||
+         new Date(updates.end_datetime) < maxShot)
       ) {
         throw new Error("Úprava konca návštevy by spôsobila nesúlad s časom úlovku.");
       }
@@ -118,8 +140,12 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
     // kontrola štruktúry (ak sa mení)
     if (updates.structure_id) {
       const sCheck = await client.query(`
-        SELECT * FROM structures WHERE id = $1 AND hunting_area_id = $2 AND is_deleted = false
-      `, [updates.structure_id, visit.hunting_area_id]);
+        SELECT s.* 
+        FROM structures s
+        JOIN hunting_areas a ON s.hunting_area_id = a.id
+        WHERE s.id = $1 AND s.hunting_area_id = $2 AND s.is_deleted = false AND a.hunting_ground_id = $3
+      `, [updates.structure_id, visit.hunting_area_id, hunting_ground_id]);
+
       if (sCheck.rowCount === 0) throw new Error("Neplatná štruktúra");
     }
 
@@ -153,3 +179,47 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
 }
 
 
+
+
+export async function softDeleteVisitAndRecords(userId, visitId) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Overenie, či je používateľ admin v danom revíri
+    const isAdmin = await client.query(`
+      SELECT 1
+      FROM visits v
+      JOIN hunting_areas ha ON v.hunting_area_id = ha.id
+      JOIN user_hunting_ground uhg ON uhg.hunting_ground_id = ha.hunting_ground_id
+      WHERE v.id = $1 AND uhg.user_id = $2 AND uhg.role = 'Admin' AND v.is_deleted = false
+    `, [visitId, userId]);
+
+    if (isAdmin.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return false; // nie je admin v revíri – zakázať vymazanie
+    }
+
+    // Soft delete úlovkov
+    await client.query(`
+      UPDATE hunting_records
+      SET is_deleted = true
+      WHERE visit_id = $1
+    `, [visitId]);
+
+    // Soft delete návštevy
+    const result = await client.query(`
+      UPDATE visits
+      SET is_deleted = true
+      WHERE id = $1
+    `, [visitId]);
+
+    await client.query("COMMIT");
+    return result.rowCount > 0;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
