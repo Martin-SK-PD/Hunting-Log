@@ -3,12 +3,18 @@ import VisitsTable from "./visits_table";
 import CenteredModal from "./centered_modal";
 import AddVisitForm from "./add_visit_form";
 import AddHuntingRecordForm from "./add_hunting_record_form";
+import ConfirmDeleteForm from "./forms/confirm_delete_form";
+import { useAuth } from "./AuthContext";
 
 function Visits_log() {
+  const { user } = useAuth();
   const [visits, setVisits] = useState([]);
-  const [showVisitModal, setShowVisitModal] = useState(false);
-  const [selectedVisit, setSelectedVisit] = useState(null);
-  const [editingVisit, setEditingVisit] = useState(null); 
+  const [editMode, setEditMode] = useState(false);
+  const [modalData, setModalData] = useState({
+    show: false,
+    title: "",
+    content: null,
+  });
 
   const fetchVisits = async () => {
     try {
@@ -31,9 +37,46 @@ function Visits_log() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleHuntingRecordSave = async () => {
-    setSelectedVisit(null);
-    await fetchVisits();
+  const openModal = (title, content) => {
+    setModalData({ show: true, title, content });
+  };
+
+  const handleDeleteVisit = (visit) => {
+    openModal("Vymazať návštevu", (
+      <ConfirmDeleteForm
+        resourceType={"visits"}
+        resourceId={visit.id}
+        onSuccess={() => {
+          setModalData({ show: false });
+          fetchVisits();
+        }}
+        onClose={() => setModalData({ show: false })}
+      />
+    ));
+  };
+
+  const handleAddOrEditVisit = (visit = null) => {
+    openModal(visit ? "Upraviť návštevu" : "Nová návšteva", (
+      <AddVisitForm
+        initialData={visit}
+        onSave={() => {
+          setModalData({ show: false });
+          fetchVisits();
+        }}
+      />
+    ));
+  };
+
+  const handleAddHuntingRecord = (visit) => {
+    openModal("Pridať úlovok", (
+      <AddHuntingRecordForm
+        visit={visit}
+        onSave={() => {
+          setModalData({ show: false });
+          fetchVisits();
+        }}
+      />
+    ));
   };
 
   return (
@@ -43,13 +86,26 @@ function Visits_log() {
           <div className="card scrollable-card my-md-3 m-3 p-2">
             <div className="card-title px-3 pt-2">
               <div className="row">
-                <div className="col-12 col-md-9">
+                <div className="col-12 col-md-8">
                   <h4 className="text-start font-weight-bold m-2">Záznamy o návštevách</h4>
                 </div>
-                <div className="col-12 col-md-3 text-md-end">
+                <div className="col-12 col-md-2">
+                  {user?.role === "Admin" && (
+                    <div>
+                      <label className="my-2 me-2 text-md-end">Povoliť mazanie </label>
+                      <input
+                        type="checkbox"
+                        checked={editMode}
+                        onChange={() => setEditMode(!editMode)}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="col-12 col-md-2 text-md-end">
                   <button
                     className="btn btn-secondary"
-                    onClick={() => { setEditingVisit(null); setShowVisitModal(true);  }} >
+                    onClick={() => handleAddOrEditVisit()}
+                  >
                     + Nová návšteva
                   </button>
                 </div>
@@ -59,11 +115,10 @@ function Visits_log() {
             <div className="card-body">
               <VisitsTable
                 visits={visits}
-                onAddHuntingRecord={(visit) => setSelectedVisit(visit)}
-                onEditVisit={(visit) => {
-                  setEditingVisit(visit);
-                  setShowVisitModal(true);
-                }}
+                editMode={editMode}
+                onDeleteVisit={handleDeleteVisit}
+                onAddHuntingRecord={handleAddHuntingRecord}
+                onEditVisit={handleAddOrEditVisit}
               />
             </div>
           </div>
@@ -71,29 +126,11 @@ function Visits_log() {
       </div>
 
       <CenteredModal
-        show={showVisitModal}
-        onClose={() => setShowVisitModal(false)}
-        title={editingVisit ? "Upraviť návštevu" : "Nová návšteva"}
+        show={modalData.show}
+        onClose={() => setModalData({ show: false })}
+        title={modalData.title}
       >
-        <AddVisitForm
-          initialData={editingVisit}
-          onSave={() => {
-            fetchVisits();
-            setShowVisitModal(false);
-            setEditingVisit(null);
-          }}
-        />
-      </CenteredModal>
-
-      <CenteredModal
-        show={!!selectedVisit}
-        onClose={() => setSelectedVisit(null)}
-        title="Pridať úlovok"
-      >
-        <AddHuntingRecordForm
-          visit={selectedVisit}
-          onSave={handleHuntingRecordSave}
-        />
+        {modalData.content}
       </CenteredModal>
     </div>
   );

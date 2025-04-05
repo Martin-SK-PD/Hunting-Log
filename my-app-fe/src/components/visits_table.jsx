@@ -9,7 +9,7 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString();
 }
 
-function VisitsTable({ visits, onAddHuntingRecord, onEditVisit }) {
+function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDeleteVisit }) {
   const [expandedRows, setExpandedRows] = useState([]);
   const { user } = useAuth();
 
@@ -61,10 +61,10 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit }) {
                 <tr key={`expand-${v.id}`}>
                   <td colSpan="8" className="text-start bg-light">
                     <div className="p-2">
-                      <p><strong>Dátum návštevy:</strong> {formatDate(v.start_datetime)}<br/>
-                      <strong>Čas príchodu:</strong> {formatTime(v.start_datetime)}<br/>
-                      <strong>Čas odchodu:</strong> {formatTime(v.end_datetime)}<br/>
-                      <strong>Poznámka: </strong> {v.notes || "-"}</p>
+                      <p><strong>Dátum návštevy:</strong> {formatDate(v.start_datetime)}<br />
+                        <strong>Čas príchodu:</strong> {formatTime(v.start_datetime)}<br />
+                        <strong>Čas odchodu:</strong> {formatTime(v.end_datetime)}<br />
+                        <strong>Poznámka: </strong> {v.notes || "-"}</p>
                       {v.updated_at && (
                         <p className="text-muted"><small>Posledná zmena: {formatDate(v.updated_at)} {formatTime(v.updated_at)}</small></p>
                       )}
@@ -78,12 +78,20 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit }) {
                             Pridať úlovok
                           </button>
                         )}
-                        {user?.id === v.hunter_id && (
+                        {(user?.id === v.hunter_id || user?.role === "Admin") && (
                           <button
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => onEditVisit(v)}
                           >
                             Upraviť
+                          </button>
+                        )}
+                        {editMode && user?.role === "Admin" && (
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => onDeleteVisit(v)}
+                          >
+                            Vymazať
                           </button>
                         )}
                       </div>
@@ -124,6 +132,15 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit }) {
                   onClick={() => onEditVisit(v)}
                 >
                   Upraviť
+                </button>
+              )}
+
+              {editMode && user?.role === "Admin" && (
+                <button
+                  className="btn btn-sm btn-outline-danger mt-2"
+                  onClick={() => onDeleteVisit(v)}
+                >
+                  Vymazať
                 </button>
               )}
             </div>
