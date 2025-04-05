@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
-import Hunting_records_table from "./hunting_records_table"; 
+import Hunting_records_table from "./hunting_records_table";
+import { useAuth } from "./AuthContext";
+import CenteredModal from "./centered_modal";
+import AddHuntingRecordForm from "./add_hunting_record_form";
+import ConfirmDeleteForm from "./forms/confirm_delete_form";
+
 
 function Hunting_log() {
+  const { user } = useAuth();
   const [records, setRecords] = useState([]);
+  const [editMode, setEditMode] = useState(false);
+  const [modalData, setModalData] = useState({ show: false, title: "", content: null });
 
   const fetchRecords = async () => {
     try {
@@ -25,6 +33,41 @@ function Hunting_log() {
     return () => clearInterval(interval);
   }, []);
 
+  const openModal = (title, content) => {
+    setModalData({ show: true, title, content });
+  };
+
+  const handleEditRecord = (record) => {
+    openModal("Upraviť úlovok", (
+      <AddHuntingRecordForm
+        key={`edit-form-${record.id}`}
+        visit={{ id: record.visit_id }}
+        initialData={record}
+        onSave={() => {
+          setModalData({ show: false });
+          fetchRecords();
+        }}
+      />
+    ));
+  };
+
+  const handleDeleteRecord = (record) => {
+    openModal("Vymazať úlovok", (
+      <ConfirmDeleteForm
+        resourceType="hunting-records"
+        resourceId={record.id}
+        message="Chceš naozaj vymazať tento úlovok?"
+        onSuccess={() => {
+          setModalData({ show: false });
+          fetchRecords();
+        }}
+        onClose={() => setModalData({ show: false })}
+      />
+    ));
+  };
+
+
+
   return (
     <div className="container-fluid">
       <div className="row">
@@ -32,15 +75,49 @@ function Hunting_log() {
 
           <div className="card scrollable-card my-md-3 m-3 p-2">
             <div className="card-title px-3 pt-2">
-              <h4 className="text-start font-weight-bold m-2">Záznamy o úlovkoch</h4>
+
+              <div className="row">
+                <div className="col-12 col-md-9">
+                  <h4 className="text-start font-weight-bold m-2">Záznamy o úlovkoch</h4>
+                </div>
+
+                <div className="col-12 col-md-3 text-md-end">
+                  {user?.role === "Admin" && (
+                    <div className="my-2 me-2 text-md-end">
+                      <label className="me-2">Režim mazania: </label>
+                      <input
+                        type="checkbox"
+                        checked={editMode}
+                        onChange={() => setEditMode(!editMode)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
             </div>
 
             <div className="card-body">
-              <Hunting_records_table records={records} />
+              <Hunting_records_table
+                records={records}
+                user={user}
+                editMode={editMode}
+                onEdit={handleEditRecord}
+                onDelete={handleDeleteRecord}
+              />
             </div>
           </div>
         </div>
       </div>
+
+      <CenteredModal
+        show={modalData.show}
+        onClose={() => setModalData({ show: false })}
+        title={modalData.title}
+      >
+        {modalData.content}
+      </CenteredModal>
     </div>
   );
 }

@@ -1,14 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+function toLocalDateTimeInputValue(date) {
+  const d = new Date(date);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
 
-function AddHuntingRecordForm({ visit, onSave }) {
+function AddHuntingRecordForm({ visit, onSave, initialData }) {
   const [form, setForm] = useState({
     animal: "",
     weight: "",
-    date_time: new Date().toISOString().slice(0, 16),
+    date_time: toLocalDateTimeInputValue(new Date()),
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        animal: initialData.animal,
+        weight: initialData.weight,
+        date_time: toLocalDateTimeInputValue(initialData.date_time),
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -23,9 +38,16 @@ function AddHuntingRecordForm({ visit, onSave }) {
       ...form,
     };
 
+    const isEditing = !!initialData?.id;
+    const endpoint = isEditing
+      ? `http://localhost:3000/api/v1/hunting-records/${initialData.id}`
+      : "http://localhost:3000/api/v1/hunting-records";
+
+    const method = isEditing ? "PUT" : "POST";
+
     try {
-      const res = await fetch("http://localhost:3000/api/v1/hunting-records", {
-        method: "POST",
+      const res = await fetch(endpoint, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -33,14 +55,12 @@ function AddHuntingRecordForm({ visit, onSave }) {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.msg || "Neznáma chyba");
-      }
-
       const data = await res.json();
-      toast.success("Úlovok bol úspešne uložený");
-      onSave && onSave(data); // zatvorenie modalu + refresh
+
+      if (!res.ok) throw new Error(data.msg || "Neznáma chyba");
+
+      toast.success(isEditing ? "Úlovok bol upravený" : "Úlovok bol úspešne uložený");
+      onSave && onSave(data);
     } catch (err) {
       toast.error(`Chyba: ${err.message}`);
     }
@@ -54,6 +74,7 @@ function AddHuntingRecordForm({ visit, onSave }) {
           type="text"
           name="animal"
           className="form-control"
+          value={form.animal}
           onChange={handleChange}
           required
         />
@@ -66,6 +87,7 @@ function AddHuntingRecordForm({ visit, onSave }) {
           name="weight"
           className="form-control"
           step="0.01"
+          value={form.weight}
           onChange={handleChange}
           required
         />
@@ -83,7 +105,9 @@ function AddHuntingRecordForm({ visit, onSave }) {
         />
       </div>
 
-      <button type="submit" className="btn btn-primary">Uložiť úlovok</button>
+      <button type="submit" className="btn btn-primary">
+        {initialData ? "Uložiť zmeny" : "Uložiť úlovok"}
+      </button>
     </form>
   );
 }
