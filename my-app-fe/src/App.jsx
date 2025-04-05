@@ -9,6 +9,7 @@ import VisitsLog from "./components/visits_log";
 import HuntingLog from "./components/hunting_log";
 import Registration from "./components/registration_page";
 import People_in_ground from "./components/people_in_ground";
+import GroundManagement from "./components/ground_management";
 
 
 import Protected_route from "./components/protected_route";
@@ -59,7 +60,7 @@ function AppRoutes() {
           path="sprava-reviru"
           element={
             <Protected_route allowedRoles={["Admin"]}>
-              <div className="container p-4">Správa revíru</div>
+              <GroundManagement />
             </Protected_route>
           }
         />
