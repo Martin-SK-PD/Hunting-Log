@@ -1,6 +1,6 @@
 import pool from "../db.js";
 
-export function getVisitsByUser(userId) {
+export async function getVisitsByUser(userId) {
   return pool.query(`
     SELECT
       v.id,
@@ -22,6 +22,68 @@ export function getVisitsByUser(userId) {
     ORDER BY v.start_datetime DESC
   `, [userId]);
 }
+
+
+
+
+export async function getVisitsByFilters(userId, filters) {
+  const baseQuery = `
+    SELECT
+      v.id,
+      v.hunter_id, 
+      (u.first_name || ' ' || u.last_name) AS hunter_name,
+      a.name AS area_name,
+      s.name AS structure_name,
+      v.purpose,
+      v.start_datetime,
+      v.end_datetime,
+      v.notes,
+      v.updated_at
+    FROM visits v
+    JOIN users u ON v.hunter_id = u.id
+    JOIN hunting_areas a ON v.hunting_area_id = a.id
+    LEFT JOIN structures s ON v.structure_id = s.id
+    JOIN user_hunting_ground uhg ON uhg.hunting_ground_id = a.hunting_ground_id
+    WHERE uhg.user_id = $1 AND v.is_deleted = false
+  `;
+
+  const conditions = [];
+  const values = [userId];
+
+  if (filters.date) {
+    values.push(filters.date);
+    conditions.push(`DATE(v.start_datetime) = $${values.length}`);
+  }
+
+  if (filters.hunter) {
+    values.push(`%${filters.hunter}%`);
+    conditions.push(`(u.first_name || ' ' || u.last_name) ILIKE $${values.length}`);
+  }
+
+  if (filters.location) {
+    values.push(`%${filters.location}%`);
+    conditions.push(`(a.name ILIKE $${values.length} OR s.name ILIKE $${values.length})`);
+  }
+
+  if (filters.purpose) {
+    values.push(filters.purpose);
+    conditions.push(`v.purpose = $${values.length}`);
+  }
+
+  const query = baseQuery +
+    (conditions.length ? ` AND ${conditions.join(" AND ")}` : "") +
+    ` ORDER BY v.start_datetime DESC`;
+
+  const result = await pool.query(query, values);
+  return result.rows;
+}
+
+
+
+
+
+
+
 
 export async function createVisitWithChecks(userId, data) {
   const client = await pool.connect();
@@ -179,6 +241,41 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
 }
 
 
+
+
+export async function getPlannedVisits(userId) {
+  return pool.query(`
+    SELECT v.id, v.start_datetime, v.end_datetime, v.purpose, v.notes,
+           a.name AS area_name,
+           s.name AS structure_name
+    FROM visits v
+    JOIN hunting_areas a ON v.hunting_area_id = a.id
+    LEFT JOIN structures s ON v.structure_id = s.id
+    WHERE v.hunter_id = $1
+      AND v.start_datetime > NOW()
+      AND v.is_deleted = false
+    ORDER BY v.start_datetime ASC, v.id
+  `, [userId]);
+}
+
+
+export async function getLastVisit(userId) {
+  return pool.query(`
+    SELECT v.*, 
+           (u.first_name || ' ' || u.last_name) AS hunter_name,
+           a.name AS area_name,
+           s.name AS structure_name
+    FROM visits v
+    JOIN users u ON v.hunter_id = u.id
+    JOIN hunting_areas a ON v.hunting_area_id = a.id
+    LEFT JOIN structures s ON v.structure_id = s.id
+    WHERE v.hunter_id = $1
+      AND v.start_datetime < Now()
+      AND v.is_deleted = false
+    ORDER BY v.start_datetime DESC
+    LIMIT 1
+  `, [userId]);
+}
 
 
 export async function softDeleteVisitAndRecords(userId, visitId) {

@@ -1,7 +1,7 @@
 import express from "express";
 import verifyToken from "../../middleware/verifyToken.js";
-import { getVisitsByUser, createVisitWithChecks, updateVisitWithChecks, 
-        softDeleteVisitAndRecords} from "../../models/visits.js";
+import { getVisitsByFilters, createVisitWithChecks, updateVisitWithChecks, 
+         getLastVisit, getPlannedVisits, softDeleteVisitAndRecords} from "../../models/visits.js";
 
 const router = express.Router();
 
@@ -10,13 +10,14 @@ const router = express.Router();
 router.get("/", verifyToken, async (req, res) => {
   const userId = req.user.id;
   try {
-    const result = await getVisitsByUser(userId);
-    res.json(result.rows);
+    const result = await getVisitsByFilters(userId, req.query);
+    res.json(result);
   } catch (err) {
     console.error("Chyba pri načítaní návštev:", err.message);
     res.status(500).json({ msg: "Chyba servera pri načítaní návštev" });
   }
 });
+
 
 
 router.post("/", verifyToken, async (req, res) => {
@@ -51,6 +52,33 @@ router.put("/:id", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Chyba pri úprave návštevy:", err.message);
     res.status(400).json({ msg: err.message });
+  }
+});
+
+
+router.get("/planned", verifyToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const result = await getPlannedVisits(userId);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Chyba pri načítaní plánovaných návštev:", err.message);
+    res.status(500).json({ msg: "Chyba servera pri načítaní plánovaných návštev" });
+  }
+});
+
+
+router.get("/last", verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  
+  try {
+    const result = await getLastVisit(userId);
+    if (result.rowCount === 0) return res.status(404).json({ msg: "Žiadna ukončená návšteva" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Chyba pri získavaní poslednej návštevy:", err.message);
+    res.status(500).json({ msg: "Chyba servera pri načítaní poslednej návštevy" });
   }
 });
 
