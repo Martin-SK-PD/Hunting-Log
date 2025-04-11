@@ -13,6 +13,7 @@ import areaRoutes from "./routes/api_v1/areas.js";
 import structureRoutes from "./routes/api_v1/structures.js";
 
 import hunters from "./routes/api_v1/users.js"
+import announcements from "./routes/api_v1/announcements.js"
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/v1/areas", areaRoutes);
 app.use("/api/v1/structures", structureRoutes);
 
 app.use("/api/v1/hunters", hunters);
+app.use("/api/v1/announcements", announcements);
 
 app.get("/", (req, res) => {
     res.send("Server is running!");
