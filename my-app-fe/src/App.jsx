@@ -10,7 +10,7 @@ import HuntingLog from "./components/hunting_log";
 import Registration from "./components/registration_page";
 import People_in_ground from "./components/people_in_ground";
 import GroundManagement from "./components/ground_management";
-
+import Home from "./components/home_page";
 
 import Protected_route from "./components/protected_route";
 import { AuthProvider, useAuth } from "./components/AuthContext";
@@ -25,7 +25,7 @@ function AppRoutes() {
           index
           element={
             isAuthenticated ? (
-              <Navigate to="/navstevy" replace />
+              <Navigate to="/domov" replace />
             ) : (
               <LoginWelcome />
             )
@@ -36,7 +36,7 @@ function AppRoutes() {
           path="domov"
           element={
             <Protected_route allowedRoles={["Hunter", "Admin"]}>
-              <div className="container p-4">Domov</div>
+              <Home />
             </Protected_route>
           }
         />
