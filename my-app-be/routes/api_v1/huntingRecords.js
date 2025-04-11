@@ -1,20 +1,21 @@
 import express from "express";
 import verifyToken from "../../middleware/verifyToken.js";
-import { getHuntingRecordsByUser, validateVisitForHunting,  insertHuntingRecord, updateHuntingRecordWithChecks,  
+import {  validateVisitForHunting, getHuntingRecordsByFilters,
+   insertHuntingRecord, getMonthlyStats, updateHuntingRecordWithChecks,
   softDeleteHuntingRecord } from "../../models/huntingRecords.js";
 
 
 const router = express.Router();
 
 router.get("/", verifyToken, async (req, res) => {
-  const userId = req.user.id;
-
   try {
-    const result = await getHuntingRecordsByUser(userId);
-    res.json(result.rows);
+    const userId = req.user.id;
+    const filters = req.query;
+    const records = await getHuntingRecordsByFilters(userId, filters);
+    res.json(records);
   } catch (err) {
-    console.error("Chyba pri získavaní úlovkov:", err.message);
-    res.status(500).json({ msg: "Error getting hunting records" });
+    console.error(err);
+    res.status(500).json({ error: "Chyba pri načítaní úlovkov" });
   }
 });
 

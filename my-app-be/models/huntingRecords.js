@@ -24,6 +24,55 @@ export function getHuntingRecordsByUser(userId) {
 }
 
 
+
+export async function getHuntingRecordsByFilters(userId, filters = {}) {
+  const values = [userId];
+  let conditions = [`uhg.user_id = $1`, `hr.is_deleted = false`];
+
+  if (filters.month) {
+    const [year, m] = filters.month.split("-");
+    values.push(year, m);
+    conditions.push(`EXTRACT(YEAR FROM hr.date_time) = $${values.length - 1}`);
+    conditions.push(`EXTRACT(MONTH FROM hr.date_time) = $${values.length}`);
+  }
+
+  if (filters.hunter) {
+    values.push(`%${filters.hunter}%`);
+    conditions.push(`(u.first_name || ' ' || u.last_name) ILIKE $${values.length}`);
+  }
+
+  if (filters.location) {
+    values.push(`%${filters.location}%`);
+    conditions.push(`(a.name ILIKE $${values.length} OR s.name ILIKE $${values.length})`);
+  }
+
+  if (filters.animal) {
+    values.push(`%${filters.animal}%`);
+    conditions.push(`hr.animal ILIKE $${values.length}`);
+  }
+
+  const result = await pool.query(`
+    SELECT
+      hr.*,
+      (u.first_name || ' ' || u.last_name) AS hunter_name,
+      a.name AS area_name,
+      s.name AS structure_name,
+      v.hunter_id
+    FROM hunting_records hr
+    JOIN visits v ON hr.visit_id = v.id
+    JOIN users u ON v.hunter_id = u.id
+    JOIN hunting_areas a ON v.hunting_area_id = a.id
+    LEFT JOIN structures s ON v.structure_id = s.id
+    JOIN user_hunting_ground uhg ON uhg.hunting_ground_id = a.hunting_ground_id
+    WHERE ${conditions.join(" AND ")}
+    ORDER BY hr.date_time DESC
+  `, values);
+
+  return result.rows;
+}
+
+
+
 export async function validateVisitForHunting(userId, visitId, shotTime, isAdmin = false) {
   const query = `
     SELECT * FROM visits
@@ -58,6 +107,24 @@ export async function insertHuntingRecord({ visit_id, animal, weight, date_time 
   return result.rows[0];
 }
 
+export async function getMonthlyStats(userId) {
+  return pool.query(`
+    SELECT 
+      animal,
+      COUNT(*) AS count_per_animal
+    FROM (
+      SELECT DISTINCT ON (hr.id) hr.*
+      FROM hunting_records hr
+      JOIN visits v ON hr.visit_id = v.id
+      JOIN hunting_areas a ON v.hunting_area_id = a.id
+      JOIN user_hunting_ground uhg ON uhg.hunting_ground_id = a.hunting_ground_id
+      WHERE v.hunter_id = $1
+        AND hr.is_deleted = false
+        AND DATE_TRUNC('month', hr.date_time) = DATE_TRUNC('month', NOW())
+    ) sub
+    GROUP BY animal
+  `, [userId]);
+}
 
 
 export async function softDeleteHuntingRecord(userId, recordId) {
