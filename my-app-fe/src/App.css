@@ -36,6 +36,10 @@ footer{
 }
 
 
+.scrollable-column {
+  max-height: 80vh;
+  overflow-y: auto;
+}
 
 
 

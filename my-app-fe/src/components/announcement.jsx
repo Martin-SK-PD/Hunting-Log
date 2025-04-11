@@ -5,11 +5,13 @@ import ConfirmDeleteForm from "./forms/confirm_delete_form";
 import AnnouncementForm from "./forms/announcement_form";
 import { toast } from "react-toastify";
 
+
+
 function Announcement_card() {
   const { user } = useAuth();
+  const [editMode, setEditMode] = useState(false);   
   const [announcements, setAnnouncements] = useState([]);
-  const [modalData, setModalData] = useState({ show: false, title: "", content: null });
-  const [editMode, setEditMode] = useState(false); // 🆕 nový stav pre prepínač
+  const [modalData, setModalData] = useState({ show: false, title: "", content: null });      
 
   const fetchAnnouncements = async () => {
     try {

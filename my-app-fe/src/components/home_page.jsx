@@ -78,7 +78,7 @@ function Home() {
           <Announcement_card />
         </div>
 
-        <div className="col-lg-8 order-lg-1 order-2 scrollable-column" >
+        <div className="col-lg-8 order-lg-1 order-2  scrollable-column " >
           {/* Posledná návšteva */}
           <div className="card  m-3">
             <div className="card-header">Posledná návšteva</div>
