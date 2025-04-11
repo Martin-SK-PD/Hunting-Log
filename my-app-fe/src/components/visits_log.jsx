@@ -5,11 +5,20 @@ import AddVisitForm from "./add_visit_form";
 import AddHuntingRecordForm from "./add_hunting_record_form";
 import ConfirmDeleteForm from "./forms/confirm_delete_form";
 import { useAuth } from "./AuthContext";
+import VisitFilters from "./visit_filters";
+import DateNavigator from "./date_navigator";
+
 
 function Visits_log() {
   const { user } = useAuth();
   const [visits, setVisits] = useState([]);
   const [editMode, setEditMode] = useState(false);
+  const [filters, setFilters] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    location: "",
+    purpose: "",
+    hunter: "",
+  });
   const [modalData, setModalData] = useState({
     show: false,
     title: "",
@@ -18,13 +27,20 @@ function Visits_log() {
 
   const fetchVisits = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/v1/visits", {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, val]) => {
+        if (val) params.append(key, val);
+      });
+
+      const res = await fetch(`http://localhost:3000/api/v1/visits?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      if (!res.ok) throw new Error("Chyba pri načítaní návštev");
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error("Chyba pri načítaní návštev");
+      }
       setVisits(data);
     } catch (err) {
       console.error("Chyba:", err);
@@ -35,7 +51,7 @@ function Visits_log() {
     fetchVisits();
     const interval = setInterval(fetchVisits, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [filters]);
 
   const openModal = (title, content) => {
     setModalData({ show: true, title, content });
@@ -85,30 +101,39 @@ function Visits_log() {
         <div className="col-lg-12">
           <div className="card scrollable-card my-md-3 m-3 p-2">
             <div className="card-title px-3 pt-2">
-              <div className="row">
-                <div className="col-12 col-md-8">
+              <div className="row align-items-center">
+                <div className="col-md-4">
                   <h4 className="text-start font-weight-bold m-2">Záznamy o návštevách</h4>
                 </div>
-                <div className="col-12 col-md-2">
+                <div className="col-md-4">
+                  <DateNavigator
+                    mode="day"
+                    date={filters.date}
+                    onChange={(newDate) => setFilters((prev) => ({ ...prev, date: newDate }))}
+                  />
+                </div>
+                <div className="col-md-2">
                   {user?.role === "Admin" && (
-                    <div>
-                      <label className="my-2 me-2 text-md-end">Povoliť mazanie </label>
+                    <div className="text-md-end">
+                      <label className="me-2" htmlFor="mazat">Povoliť mazanie</label>
                       <input
                         type="checkbox"
+                        name="mazat"
+                        id="mazat"
                         checked={editMode}
                         onChange={() => setEditMode(!editMode)}
                       />
                     </div>
                   )}
                 </div>
-                <div className="col-12 col-md-2 text-md-end">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => handleAddOrEditVisit()}
-                  >
+                <div className="col-md-2 text-md-end">
+                  <button className="btn btn-secondary" onClick={() => handleAddOrEditVisit()}>
                     + Nová návšteva
                   </button>
                 </div>
+              </div>
+              <div className="px-2 pt-3">
+                <VisitFilters filters={filters} onChange={setFilters} />
               </div>
             </div>
 
