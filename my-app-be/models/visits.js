@@ -142,6 +142,10 @@ export async function createVisitWithChecks(userId, data) {
   }
 }
 
+
+
+
+
 export async function updateVisitWithChecks(userId, visitId, updates) {
   const client = await pool.connect();
   try {
@@ -174,6 +178,17 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
       throw new Error("Nemáte oprávnenie upravovať túto návštevu.");
     }
 
+    const areaCheck = await client.query(`
+      SELECT * FROM hunting_areas
+      WHERE id = $1
+        AND hunting_ground_id = $2
+        AND is_deleted = false
+    `, [updates.hunting_area_id, hunting_ground_id]);
+
+    if (areaCheck.rowCount === 0) {
+      throw new Error("Neplatná oblasť pre tento revír.");
+    }
+
     // kontrola - ak existuje úlovok a účel sa mení alebo meníme čas
     const records = await client.query(`
       SELECT * FROM hunting_records 
@@ -184,44 +199,37 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
       const shotTimes = records.rows.map(r => new Date(r.date_time));
       const minShot = new Date(Math.min(...shotTimes));
       const maxShot = new Date(Math.max(...shotTimes));
-
-      if (
-        updates.end_datetime &&
-        (new Date(visit.start_datetime) > new Date(updates.end_datetime) ||
-         new Date(updates.end_datetime) < minShot ||
-         new Date(updates.end_datetime) < maxShot)
-      ) {
+    
+      if (updates.start_datetime && new Date(updates.start_datetime) > minShot) {
+        throw new Error("Začiatok návštevy musí byť pred časom úlovku.");
+      }
+    
+      if (updates.end_datetime &&
+          (new Date(visit.start_datetime) > new Date(updates.end_datetime) ||
+           new Date(updates.end_datetime) < minShot ||
+           new Date(updates.end_datetime) < maxShot)) {
         throw new Error("Úprava konca návštevy by spôsobila nesúlad s časom úlovku.");
       }
-
+    
       if (updates.purpose && updates.purpose !== visit.purpose) {
         throw new Error("Nie je možné meniť účel návštevy, ktorá má úlovok.");
       }
     }
 
-    // kontrola štruktúry (ak sa mení)
-    if (updates.structure_id) {
-      const sCheck = await client.query(`
-        SELECT s.* 
-        FROM structures s
-        JOIN hunting_areas a ON s.hunting_area_id = a.id
-        WHERE s.id = $1 AND s.hunting_area_id = $2 AND s.is_deleted = false AND a.hunting_ground_id = $3
-      `, [updates.structure_id, visit.hunting_area_id, hunting_ground_id]);
-
-      if (sCheck.rowCount === 0) throw new Error("Neplatná štruktúra");
-    }
-
+    // vykonanie aktualizácie návštevy
     const updated = await client.query(`
       UPDATE visits SET 
-        structure_id = $1,
-        start_datetime = $2,
-        end_datetime = $3,
-        purpose = $4,
-        notes = $5,
+        hunting_area_id = $1,
+        structure_id = $2,
+        start_datetime = $3,
+        end_datetime = $4,
+        purpose = $5,
+        notes = $6,
         updated_at = NOW()
-      WHERE id = $6
+      WHERE id = $7
       RETURNING *
     `, [
+      updates.hunting_area_id,
       updates.structure_id || null,
       updates.start_datetime,
       updates.end_datetime || null,
@@ -239,7 +247,6 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
     client.release();
   }
 }
-
 
 
 

@@ -70,7 +70,21 @@ function AddVisitForm({ onSave, initialData = null }) {
   }, [initialData]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+  
+    if (name === "area_id") {
+      // Keď sa zmení oblasť, reset štruktúry
+      setForm((prev) => ({
+        ...prev,
+        area_id: value,
+        structure_id: "", // Nulujeme štruktúru
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {

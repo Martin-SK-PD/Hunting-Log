@@ -35,13 +35,14 @@ router.post("/", verifyToken, async (req, res) => {
 router.put("/:id", verifyToken, async (req, res) => {
   const userId = req.user.id;
   const visitId = parseInt(req.params.id, 10);
-  const { start_datetime, structure_id, end_datetime, purpose, notes } = req.body;
+  const {hunting_area_id , start_datetime, structure_id, end_datetime, purpose, notes } = req.body;
 
   if (!structure_id && structure_id !== null) return res.status(400).json({ msg: "Neplatné ID štruktúry" });
   if (end_datetime && isNaN(new Date(end_datetime))) return res.status(400).json({ msg: "Neplatný čas ukončenia" });
 
   try {
     const result = await updateVisitWithChecks(userId, visitId, {
+      hunting_area_id,
       structure_id,
       start_datetime,
       end_datetime,
