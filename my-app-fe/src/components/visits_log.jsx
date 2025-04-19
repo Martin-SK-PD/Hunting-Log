@@ -13,6 +13,9 @@ function Visits_log() {
   const { user } = useAuth();
   const [visits, setVisits] = useState([]);
   const [editMode, setEditMode] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+
   const [filters, setFilters] = useState({
     date: new Date().toISOString().slice(0, 10),
     location: "",
@@ -114,11 +117,11 @@ function Visits_log() {
                 </div>
                 <div className="col-md-2">
                   {user?.role === "Admin" && (
-                    <div className="text-md-end">
+                    <div className="my-2 me-2 text-md-end">
                       <label className="me-2" htmlFor="mazat">Povoliť mazanie</label>
                       <input
+                        className="form-check-input"
                         type="checkbox"
-                        name="mazat"
                         id="mazat"
                         checked={editMode}
                         onChange={() => setEditMode(!editMode)}
@@ -132,8 +135,26 @@ function Visits_log() {
                   </button>
                 </div>
               </div>
-              <div className="px-2 pt-3">
-                <VisitFilters filters={filters} onChange={setFilters} />
+              <div className="mt-3">
+
+                {/* Tlačidlo na filtre pre menšíe obrazovky */}
+                <div className="d-block d-lg-none">
+                  <button
+                    className="btn btn-sm btn-outline-secondary mb-2"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    {showFilters ? "Skryť filtre" : "Zobraziť filtre"}
+                  </button>
+
+                  {showFilters && (
+                    <VisitFilters filters={filters} onChange={setFilters} />
+                  )}
+                </div>
+
+                {/* Na veľkých obrazovkách budú filtre vždy viditeľné */}
+                <div className="d-none d-lg-block">
+                  <VisitFilters filters={filters} onChange={setFilters} />
+                </div>
               </div>
             </div>
 

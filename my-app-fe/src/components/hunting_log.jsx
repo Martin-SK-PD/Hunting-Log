@@ -12,6 +12,7 @@ function Hunting_log() {
   const [records, setRecords] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [modalData, setModalData] = useState({ show: false, title: "", content: null });
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     month: new Date().toISOString().slice(0, 7),
     hunter: "",
@@ -101,8 +102,8 @@ function Hunting_log() {
                     <div className="my-2 me-2 text-md-end">
                       <label className="me-2" htmlFor="mazat">Režim mazania: </label>
                       <input
+                        className="form-check-input"
                         type="checkbox"
-                        name="mazat"
                         id="mazat"
                         checked={editMode}
                         onChange={() => setEditMode(!editMode)}
@@ -111,8 +112,26 @@ function Hunting_log() {
                   )}
                 </div>
               </div>
-              <div className="px-2 pt-3">
-                <HuntingFilters filters={filters} onChange={setFilters} />
+              <div className="mt-3">
+                {/* Tlačidlo na filtre pre menšíe obrazovky */}
+                <div className="d-block d-lg-none">
+                  <button
+                    className="btn btn-sm btn-outline-secondary mb-2"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    {showFilters ? "Skryť filtre" : "Zobraziť filtre"}
+                  </button>
+
+
+                  {showFilters && (
+                    <HuntingFilters filters={filters} onChange={setFilters} />
+                  )}
+                </div>
+
+                {/* Na veľkých obrazovkách budú filtre vždy viditeľné */}
+                <div className="d-none d-lg-block">
+                  <HuntingFilters filters={filters} onChange={setFilters} />
+                </div>
               </div>
             </div>
 
