@@ -14,9 +14,7 @@ function GroundManagement() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:3000/api/v1/areas", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error("Invalid data format");
@@ -31,9 +29,7 @@ function GroundManagement() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`http://localhost:3000/api/v1/structures?area_id=${areaId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (!Array.isArray(data)) throw new Error();
@@ -86,7 +82,7 @@ function GroundManagement() {
           setModalData({ show: false });
           fetchAreas();
         }}
-        onCancel={() => setModalData({ show: false })}
+        onClose={() => setModalData({ show: false })}
       />
     ));
   };
@@ -145,6 +141,7 @@ function GroundManagement() {
             </div>
           </div>
         </div>
+
         <div className="card-body">
           {areas.length === 0 ? (
             <p className="text-muted">Žiadne oblasti neboli nájdené.</p>
@@ -156,21 +153,33 @@ function GroundManagement() {
                     <div className="card-body d-flex flex-column">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <h5 className="mb-0">{area.name}</h5>
-                        <div>
-                          <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEditArea(area)}>Upraviť</button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteArea(area.id)}>Vymazať</button>
+                        <div className="d-flex gap-1">
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleEditArea(area)}>
+                            Upraviť
+                          </button>
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleDeleteArea(area.id)}>
+                            Vymazať
+                          </button>
                         </div>
                       </div>
-                      <button className="btn btn-sm btn-secondary mb-2" onClick={() => handleAddStructure(area.id)}>+ Pridať štruktúru</button>
+
+                      <button className="btn btn-sm btn-secondary mb-2" onClick={() => handleAddStructure(area.id)}>
+                        + Pridať štruktúru
+                      </button>
+
                       {structures[area.id] ? (
                         <div style={{ overflowY: "auto", maxHeight: "200px" }}>
                           <ul className="list-group">
                             {structures[area.id].map((s) => (
                               <li key={s.id} className="list-group-item d-flex justify-content-between align-items-center py-1">
                                 {s.name}
-                                <div>
-                                  <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEditStructure(s, area.id)}>Upraviť</button>
-                                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteStructure(s.id, area.id)}>Vymazať</button>
+                                <div className="d-flex gap-1">
+                                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleEditStructure(s, area.id)}>
+                                    Upraviť
+                                  </button>
+                                  <button className="btn btn-sm btn-outline-primary" onClick={() => handleDeleteStructure(s.id, area.id)}>
+                                    Vymazať
+                                  </button>
                                 </div>
                               </li>
                             ))}
