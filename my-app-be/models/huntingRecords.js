@@ -92,6 +92,10 @@ export async function validateVisitForHunting(userId, visitId, shotTime, isAdmin
     throw new Error("Čas úlovku nie je v rozsahu návštevy");
   }
 
+  if (shotTime > new Date()) {
+    throw new Error("Čas úlovku nemôže byť v budúcnosti.");
+  }
+
   return visit;
 }
 
