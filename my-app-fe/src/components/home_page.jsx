@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Announcement_card from "./announcement";
 import CenteredModal from "./centered_modal";
 import AddVisitForm from "./add_visit_form";
-
+import AddHuntingRecordForm from "./add_hunting_record_form";
 
 function formatTime(iso) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -13,62 +13,60 @@ function Home() {
   const [stats, setStats] = useState(null);
   const [futureVisits, setFutureVisits] = useState([]);
   const [editingVisit, setEditingVisit] = useState(null);
+  const [addingHuntingRecord, setAddingHuntingRecord] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  const fetchAll = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
 
+      const lastRes = await fetch("http://localhost:3000/api/v1/visits/last", { headers });
+      if (lastRes.ok) {
+        const lastData = await lastRes.json();
+        setLastVisit(lastData);
+      }
+
+      const plannedRes = await fetch("http://localhost:3000/api/v1/visits/planned", { headers });
+      if (plannedRes.ok) {
+        const plannedData = await plannedRes.json();
+        setFutureVisits(plannedData);
+      }
+
+      const statsRes = await fetch("http://localhost:3000/api/v1/hunting-records/monthly-stats", { headers });
+      const rawStats = await statsRes.json();
+
+      const hunting_counts = {};
+      let total = 0;
+      for (const row of rawStats) {
+        if (row.animal) {
+          const count = Number(row.count_per_animal);
+          hunting_counts[row.animal] = count;
+          total += count;
+        }
+      }
+
+      setStats({
+        total_hunts: total,
+        hunting_counts,
+      });
+    } catch (err) {
+      console.error("Chyba pri načítaní dát:", err);
+    }
+  };
 
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const headers = { Authorization: `Bearer ${token}` };
-
-        // Posledná návšteva
-        const lastRes = await fetch("http://localhost:3000/api/v1/visits/last", { headers });
-        if(lastRes.ok){
-          const lastData = await lastRes.json();
-          setLastVisit(lastData);
-        }
-       
-
-        // Plánované návštevy
-        const plannedRes = await fetch("http://localhost:3000/api/v1/visits/planned", { headers });
-        if(plannedRes.ok){
-          const plannedData = await plannedRes.json();
-          setFutureVisits(plannedData);
-        }
-        
-
-        // Štatistiky
-        const statsRes = await fetch("http://localhost:3000/api/v1/hunting-records/monthly-stats", { headers });
-        const rawStats = await statsRes.json();
-
-        const hunting_counts = {};
-        let total = 0;
-
-        for (const row of rawStats) {
-          if (row.animal) {
-            const count = Number(row.count_per_animal);
-            hunting_counts[row.animal] = count;
-            total += count;
-          }
-        }
-
-        setStats({
-          total_hunts: total,
-          hunting_counts,
-        });
-
-      } catch (err) {
-        console.error("Chyba pri načítaní dát:", err);
-      }
-    };
-
     fetchAll();
     const interval = setInterval(fetchAll, 30000);
     return () => clearInterval(interval);
   }, []);
 
+  const handleCloseModal = () => {
+    fetchAll();
+    setShowModal(false);
+    setEditingVisit(null);
+    setAddingHuntingRecord(false);
+  };
 
   return (
     <div className="container-fluid">
@@ -78,12 +76,11 @@ function Home() {
           <Announcement_card />
         </div>
 
-        <div className="col-lg-8 order-lg-1 order-2  scrollable-column " >
+        <div className="col-lg-8 order-lg-1 order-2 scrollable-column">
           {/* Posledná návšteva */}
-          <div className="card  m-3">
+          <div className="card m-3">
             <div className="card-header">Posledná návšteva</div>
             <div className="card-body">
-              {/*console.log(lastVisit)*/}
               {lastVisit ? (
                 <>
                   <h5>{new Date(lastVisit.start_datetime).toLocaleDateString()}</h5>
@@ -98,12 +95,22 @@ function Home() {
 
                   <div className="mt-3">
                     {lastVisit.purpose === "Lov" && (
-                      <button className="btn btn-success me-2">Pridať úlovok</button>
+                      <button
+                        className="btn btn-success me-2"
+                        onClick={() => {
+                          setEditingVisit(lastVisit);
+                          setAddingHuntingRecord(true);
+                          setShowModal(true);
+                        }}
+                      >
+                        Pridať úlovok
+                      </button>
                     )}
                     <button
                       className="btn btn-secondary"
                       onClick={() => {
                         setEditingVisit(lastVisit);
+                        setAddingHuntingRecord(false);
                         setShowModal(true);
                       }}
                     >
@@ -124,14 +131,10 @@ function Home() {
               {futureVisits.length > 0 ? (
                 <ul className="list-group">
                   {futureVisits.map((v) => (
-                    <li
-                      className="list-group-item d-flex justify-content-between align-items-center"
-                      key={v.id}
-                    >
+                    <li key={v.id} className="list-group-item d-flex justify-content-between align-items-center">
                       <div>
                         <strong>{new Date(v.start_datetime).toLocaleDateString()} </strong>
-                        {formatTime(v.start_datetime)} - {formatTime(v.end_datetime)}
-                        <br />
+                        {formatTime(v.start_datetime)} - {formatTime(v.end_datetime)}<br />
                         <span className="text-muted">{v.purpose} – {v.area_name}</span>
                       </div>
                     </li>
@@ -149,12 +152,12 @@ function Home() {
             <div className="card-body">
               {stats ? (
                 <>
-                  <p><strong>Počet Úlovkov:</strong> {stats.total_hunts}</p>
+                  <p><strong>Počet úlovkov:</strong> {stats.total_hunts}</p>
                   <p><strong>Úlovky:</strong></p>
                   {stats.hunting_counts && Object.keys(stats.hunting_counts).length > 0 ? (
                     <ul className="list">
                       {Object.entries(stats.hunting_counts).map(([animal, count]) => (
-                        <li key={animal}> {animal}: {count}</li>
+                        <li key={animal}>{animal}: {count}</li>
                       ))}
                     </ul>
                   ) : (
@@ -169,24 +172,16 @@ function Home() {
         </div>
       </div>
 
-
-      
       <CenteredModal
         show={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setEditingVisit(null);
-        }}
-        title="Upraviť návštevu"
+        onClose={handleCloseModal}
+        title={addingHuntingRecord ? "Pridať úlovok" : "Upraviť návštevu"}
       >
-        <AddVisitForm
-          initialData={editingVisit}
-          onSave={() => {
-            fetchAll();
-            setShowModal(false);
-            setEditingVisit(null);
-          }}
-        />
+        {addingHuntingRecord ? (
+          <AddHuntingRecordForm visit={editingVisit} onSave={handleCloseModal} />
+        ) : (
+          <AddVisitForm initialData={editingVisit} onSave={handleCloseModal} />
+        )}
       </CenteredModal>
     </div>
   );
