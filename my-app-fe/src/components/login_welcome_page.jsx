@@ -88,8 +88,13 @@ function Login_welcome_page() {
 
                         <div className="card-body">
                             <h3 className="text-center font-weight-bold m-2">Polovnicka kniha</h3>
-                            <p className="text-center p-2">Vitajte na stránke ___________. Táto stránka je projektom, <br /> ktorý má pomôcť polovníkom
-                                zaznámenávať ich aktivity.</p>
+                            <p className="text-center p-2">
+                            <br/>
+                            Vitajte na stránke Poľovnícka kniha.<br /> <br/>
+                            Táto aplikácia vznikla ako študentský projekt s cieľom uľahčiť evidenciu návštev, úlovkov a správu poľovníckeho revíru.<br />
+                            <br />
+                            Aplikácia je navrhnutá tak, aby bola prehľadná, praktická a ľahko použiteľná pre každého poľovníka.
+                            </p>
 
 
                         </div>
