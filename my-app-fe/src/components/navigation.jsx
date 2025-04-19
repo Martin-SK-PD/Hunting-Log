@@ -1,53 +1,126 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "./AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Collapse } from "bootstrap";
 
 function Navigation() {
   const { isAuthenticated, user, logout } = useAuth();
   const role = user?.role;
+  const navigate = useNavigate();
+
+  // Funkcia na zatvorenie navbaru
+  const closeNavbar = () => {
+    const nav = document.getElementById("navbarNav");
+    if (nav && nav.classList.contains("show")) {
+      const collapseInstance = Collapse.getOrCreateInstance(nav);
+      collapseInstance.hide();
+    }
+  };
+
+  const handleNavClick = (path) => {
+    closeNavbar();
+    setTimeout(() => {
+      navigate(path);
+    }, 100);
+  };
+
+  const handleLogout = () => {
+    closeNavbar();
+    setTimeout(() => {
+      logout();
+    }, 100);
+  };
+
+  // Pridáme event listener na hamburger tlačidlo
+  useEffect(() => {
+    const toggler = document.querySelector(".navbar-toggler");
+    const nav = document.getElementById("navbarNav");
+
+    const handleTogglerClick = () => {
+      if (nav) {
+        const collapseInstance = Collapse.getOrCreateInstance(nav);
+        if (nav.classList.contains("show")) {
+          collapseInstance.hide(); // ak je otvorené → zavri
+        } else {
+          collapseInstance.show(); // ak je zatvorené → otvor
+        }
+      }
+    };
+
+    if (toggler) {
+      toggler.addEventListener("click", handleTogglerClick);
+    }
+
+    return () => {
+      if (toggler) {
+        toggler.removeEventListener("click", handleTogglerClick);
+      }
+    };
+  }, []);
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light ">
+    <nav className="navbar navbar-expand-lg navbar-light">
       <div className="container">
-        <Link className="navbar-brand" to="/">
+        {/* Logo */}
+        <button
+          className="navbar-brand btn p-0 border-0 bg-transparent"
+          onClick={() => handleNavClick("/domov")}
+        >
           <img src="logo.png" alt="logo" />
-        </Link>
+        </button>
 
+        {/* Hamburger */}
         <button
           className="navbar-toggler"
           type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
 
+        {/* Navigačné menu */}
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav">
             <li className="nav-item">
-              <Link className="nav-link" to="/domov">Domov</Link>
+              <button className="btn nav-link" onClick={() => handleNavClick("/domov")}>
+                Domov
+              </button>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/navstevy">Zoznam návštev</Link>
+              <button className="btn nav-link" onClick={() => handleNavClick("/navstevy")}>
+                Zoznam návštev
+              </button>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/ulovky">Úlovky</Link>
+              <button className="btn nav-link" onClick={() => handleNavClick("/ulovky")}>
+                Úlovky
+              </button>
             </li>
 
             {isAuthenticated && role === "Admin" && (
               <>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/sprava-reviru">Správa revíru</Link>
+                  <button className="btn nav-link" onClick={() => handleNavClick("/sprava-reviru")}>
+                    Správa revíru
+                  </button>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/ludia">Ľudia v revíri</Link>
+                  <button className="btn nav-link" onClick={() => handleNavClick("/ludia")}>
+                    Ľudia v revíri
+                  </button>
                 </li>
               </>
             )}
           </ul>
+
           {isAuthenticated && (
             <ul className="navbar-nav ms-auto">
               <li className="nav-item">
-                <button className="btn nav-link" onClick={logout}>Odhlásiť sa</button>
+                <button className="btn nav-link" onClick={handleLogout}>
+                  Odhlásiť sa
+                </button>
               </li>
             </ul>
           )}
@@ -58,4 +131,3 @@ function Navigation() {
 }
 
 export default Navigation;
-
