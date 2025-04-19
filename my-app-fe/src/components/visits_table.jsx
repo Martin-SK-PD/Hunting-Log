@@ -126,9 +126,9 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDele
                   Pridať úlovok
                 </button>
               )}
-              {user?.id === v.hunter_id && (
+              {(user?.id === v.hunter_id || user?.role === "Admin") && (
                 <button
-                  className="btn btn-sm btn-outline-primary mt-2"
+                  className="btn btn-sm btn-warning mt-2 me-2"
                   onClick={() => onEditVisit(v)}
                 >
                   Upraviť
@@ -137,7 +137,7 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDele
 
               {editMode && user?.role === "Admin" && (
                 <button
-                  className="btn btn-sm btn-outline-danger mt-2"
+                  className="btn btn-sm btn-danger mt-2"
                   onClick={() => onDeleteVisit(v)}
                 >
                   Vymazať
