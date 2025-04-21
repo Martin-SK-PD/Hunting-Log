@@ -3,8 +3,8 @@
 
 -- ENUM types, in futere some other structure_types or visit_purposes may be added
 CREATE TYPE user_role AS ENUM ('Hunter', 'Admin');
-CREATE TYPE structure_type AS ENUM ('Lookout Tower', 'Feeding Station', 'Shelter/Lodge');
-CREATE TYPE visit_purpose AS ENUM ('Hunting', 'Inspection', 'Feeding', 'Repair', 'Lodge stay');
+CREATE TYPE structure_type AS ENUM ('Posed', 'Krmelec', 'Chatka');
+CREATE TYPE visit_purpose AS ENUM ('Lov', 'Obhliadka', 'Prikrmovanie', 'Oprava', 'Prenocovanie');
 
 -- Users 
 CREATE TABLE users ( 
@@ -62,7 +62,8 @@ CREATE TABLE visits (
     start_datetime TIMESTAMP NOT NULL,
     end_datetime TIMESTAMP NOT NULL,
     purpose visit_purpose NOT NULL,
-    notes TEXT,
+    notes TEXT, 
+    updated_at TIMESTAMP DEFAULT NOW(),
     is_deleted BOOLEAN DEFAULT FALSE --(soft delete)
 );
 
