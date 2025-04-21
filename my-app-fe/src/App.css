@@ -1,12 +1,12 @@
 
 #root{
-  background-image: url("background2.jpg");
+  background-image: url("/background2.jpg");
   background-size: cover; 
 }
 
 @media (min-width: 1200px) {
   #root {
-    background-image: url("background.jpg");
+    background-image: url("/background.jpg");
     background-size: cover;
   }
 }
