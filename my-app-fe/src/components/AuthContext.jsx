@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const res = await fetch("http://localhost:3000/verify", {
+      const res = await fetch("/api/verify", {
         method: "POST",
         headers: { jwt_token: token },
       });

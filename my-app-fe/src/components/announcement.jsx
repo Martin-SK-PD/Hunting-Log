@@ -16,7 +16,7 @@ function Announcement_card() {
   const fetchAnnouncements = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3000/api/v1/announcements", {
+      const res = await fetch("/api/v1/announcements", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Nepodarilo sa načítať oznamy");

@@ -14,7 +14,7 @@ function ConfirmDeleteForm({
 
   const handleDelete = async () => {
     try {
-      const endpoint = `http://localhost:3000/api/v1/${resourceType}/${resourceId}`;
+      const endpoint = `/api/v1/${resourceType}/${resourceId}`;
       const res = await fetch(endpoint, { method: "DELETE", headers });
       const result = await res.json();
 

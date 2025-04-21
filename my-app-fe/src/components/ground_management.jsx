@@ -13,7 +13,7 @@ function GroundManagement() {
   const fetchAreas = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3000/api/v1/areas", {
+      const res = await fetch("/api/v1/areas", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -28,7 +28,7 @@ function GroundManagement() {
   const fetchStructures = async (areaId) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3000/api/v1/structures?area_id=${areaId}`, {
+      const res = await fetch(`/api/v1/structures?area_id=${areaId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();

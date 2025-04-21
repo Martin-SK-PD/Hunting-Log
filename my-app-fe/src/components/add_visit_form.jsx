@@ -15,7 +15,7 @@ function AddVisitForm({ onSave, initialData = null }) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:3000/api/v1/areas", {
+    fetch("/api/v1/areas", {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then((res) => res.json())
@@ -34,7 +34,7 @@ function AddVisitForm({ onSave, initialData = null }) {
   useEffect(() => {
     if (!form.area_id) return;
     const token = localStorage.getItem("token");
-    fetch(`http://localhost:3000/api/v1/structures?area_id=${form.area_id}`, {
+    fetch(`/api/v1/structures?area_id=${form.area_id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then((res) => res.json())
@@ -107,7 +107,7 @@ function AddVisitForm({ onSave, initialData = null }) {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/v1/visits${initialData ? "/" + initialData.id : ""}`,
+        `/api/v1/visits${initialData ? "/" + initialData.id : ""}`,
         {
           method: initialData ? "PUT" : "POST",
           headers: {

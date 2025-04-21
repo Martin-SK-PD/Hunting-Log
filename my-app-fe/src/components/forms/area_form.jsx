@@ -14,8 +14,8 @@ function AreaForm({ areaId = null, initialName = "", onSuccess, onCancel }) {
       };
 
       const url = areaId
-        ? `http://localhost:3000/api/v1/areas/${areaId}`
-        : "http://localhost:3000/api/v1/areas";
+        ? `/api/v1/areas/${areaId}`
+        : "/api/v1/areas";
 
       const method = areaId ? "PUT" : "POST";
 

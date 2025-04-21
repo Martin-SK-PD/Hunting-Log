@@ -28,7 +28,7 @@ function Hunting_log() {
       if (filters.location) params.append("location", filters.location);
       if (filters.animal) params.append("animal", filters.animal);
 
-      const res = await fetch(`http://localhost:3000/api/v1/hunting-records?${params}`, {
+      const res = await fetch(`/api/v1/hunting-records?${params}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

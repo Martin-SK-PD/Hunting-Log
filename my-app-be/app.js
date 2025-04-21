@@ -22,9 +22,14 @@ app.use(cors());
 app.use(express.json());
 
 
-app.use("/register", registerRoute);
-app.use("/login", loginRoute);
-app.use("/verify", verifyRoute); 
+if (process.env.STATUS === 'production') {
+  app.set('trust proxy', 1);
+}
+
+
+app.use("/api/register", registerRoute);
+app.use("/api/login", loginRoute);
+app.use("/api/verify", verifyRoute); 
 
 app.use("/api/v1/visits", visitsRouter);
 app.use("/api/v1/hunting-records", huntingRecordsRouter);

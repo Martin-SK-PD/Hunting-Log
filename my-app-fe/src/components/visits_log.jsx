@@ -35,7 +35,7 @@ function Visits_log() {
         if (val) params.append(key, val);
       });
 
-      const res = await fetch(`http://localhost:3000/api/v1/visits?${params.toString()}`, {
+      const res = await fetch(`/api/v1/visits?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },

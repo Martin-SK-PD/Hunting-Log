@@ -21,19 +21,19 @@ function Home() {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      const lastRes = await fetch("http://localhost:3000/api/v1/visits/last", { headers });
+      const lastRes = await fetch("/api/v1/visits/last", { headers });
       if (lastRes.ok) {
         const lastData = await lastRes.json();
         setLastVisit(lastData);
       }
 
-      const plannedRes = await fetch("http://localhost:3000/api/v1/visits/planned", { headers });
+      const plannedRes = await fetch("/api/v1/visits/planned", { headers });
       if (plannedRes.ok) {
         const plannedData = await plannedRes.json();
         setFutureVisits(plannedData);
       }
 
-      const statsRes = await fetch("http://localhost:3000/api/v1/hunting-records/monthly-stats", { headers });
+      const statsRes = await fetch("/api/v1/hunting-records/monthly-stats", { headers });
       const rawStats = await statsRes.json();
 
       const hunting_counts = {};

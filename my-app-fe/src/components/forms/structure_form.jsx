@@ -17,8 +17,8 @@ function StructureForm({ areaId, initialData = null, onClose, onSuccess }) {
 
     try {
       const url = isEdit
-        ? `http://localhost:3000/api/v1/structures/${initialData.id}`
-        : "http://localhost:3000/api/v1/structures";
+        ? `/api/v1/structures/${initialData.id}`
+        : "/api/v1/structures";
       const method = isEdit ? "PUT" : "POST";
       const body = isEdit
         ? JSON.stringify({ name, type, notes })

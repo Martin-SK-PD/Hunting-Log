@@ -16,8 +16,8 @@ function AnnouncementForm({ initialData = {}, onSave }) {
     const token = localStorage.getItem("token");
     const method = initialData.id ? "PUT" : "POST";
     const endpoint = initialData.id
-      ? `http://localhost:3000/api/v1/announcements/${initialData.id}`
-      : "http://localhost:3000/api/v1/announcements";
+      ? `/api/v1/announcements/${initialData.id}`
+      : "/api/v1/announcements";
 
     try {
       const res = await fetch(endpoint, {

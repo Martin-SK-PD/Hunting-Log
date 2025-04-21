@@ -40,8 +40,8 @@ function AddHuntingRecordForm({ visit, onSave, initialData }) {
 
     const isEditing = !!initialData?.id;
     const endpoint = isEditing
-      ? `http://localhost:3000/api/v1/hunting-records/${initialData.id}`
-      : "http://localhost:3000/api/v1/hunting-records";
+      ? `/api/v1/hunting-records/${initialData.id}`
+      : "/api/v1/hunting-records";
 
     const method = isEditing ? "PUT" : "POST";
 

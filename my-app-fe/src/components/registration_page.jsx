@@ -32,7 +32,7 @@ function Registration(){
     e.preventDefault();
     try {
       const body = { ...inputs };
-      const response = await fetch("http://localhost:3000/register", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

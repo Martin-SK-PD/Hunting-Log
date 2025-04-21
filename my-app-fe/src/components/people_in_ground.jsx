@@ -12,7 +12,7 @@ function People_in_ground() {
   useEffect(() => {
     const fetchUsers = async () => {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3000/api/v1/hunters/users", {
+      const res = await fetch("/api/v1/hunters/users", {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -25,7 +25,7 @@ function People_in_ground() {
   const confirmTransfer = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:3000/api/v1/hunters/transfer-admin", {
+      const res = await fetch("/api/v1/hunters/transfer-admin", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
