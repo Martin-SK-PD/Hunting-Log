@@ -1,4 +1,5 @@
 import pool from "../db.js";
+import { adjustDateIfNeeded } from "../utils/adjustDateTime.js";
 
 export function getHuntingRecordsByUser(userId) {
   return pool.query(`
@@ -74,6 +75,7 @@ export async function getHuntingRecordsByFilters(userId, filters = {}) {
 
 
 export async function validateVisitForHunting(userId, visitId, shotTime, isAdmin = false) {
+  const params = isAdmin ? [visitId] : [visitId, userId];
   const query = `
     SELECT * FROM visits
     WHERE id = $1
@@ -82,32 +84,38 @@ export async function validateVisitForHunting(userId, visitId, shotTime, isAdmin
       AND is_deleted = false
   `;
 
-  const params = isAdmin ? [visitId] : [visitId, userId];
   const result = await pool.query(query, params);
-
   if (result.rowCount === 0) throw new Error("Neplatná návšteva pre úlovok");
 
   const visit = result.rows[0];
-  if (shotTime < new Date(visit.start_datetime) || shotTime > new Date(visit.end_datetime)) {
+
+  const visitStart = new Date(visit.start_datetime);
+  const visitEnd = new Date(visit.end_datetime);
+
+  if (shotTime < visitStart || shotTime > visitEnd) {
     throw new Error("Čas úlovku nie je v rozsahu návštevy");
   }
 
   if (shotTime > new Date()) {
-    throw new Error("Čas úlovku nemôže byť v budúcnosti.");
+    throw new Error("Čas úlovku nemôže byť v budúncnosti");
   }
 
   return visit;
 }
 
 
-
 export async function insertHuntingRecord({ visit_id, animal, weight, date_time }) {
+  const adjustedDateTime = adjustDateIfNeeded(date_time, { fromBrowser: true });
+
+  await validateVisitForHunting(null, visit_id, adjustedDateTime, true);
+
   const result = await pool.query(
     `INSERT INTO hunting_records (visit_id, animal, weight, date_time)
      VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [visit_id, animal, weight, date_time]
+    [visit_id, animal, weight, adjustedDateTime]
   );
+
   return result.rows[0];
 }
 
@@ -130,7 +138,6 @@ export async function getMonthlyStats(userId) {
   `, [userId]);
 }
 
-
 export async function softDeleteHuntingRecord(userId, recordId) {
   return pool.query(`
     UPDATE hunting_records
@@ -144,9 +151,7 @@ export async function softDeleteHuntingRecord(userId, recordId) {
   `, [recordId, userId]);
 }
 
-
-
-export async function updateHuntingRecordWithChecks(userId,recordId, updates) {
+export async function updateHuntingRecordWithChecks(userId, recordId, updates) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -170,13 +175,15 @@ export async function updateHuntingRecordWithChecks(userId,recordId, updates) {
 
     if (userGroundRes.rowCount === 0) throw new Error("Nemáte oprávnenie meniť tento úlovok.");
 
-    const isAdmin = userGroundRes.rows[0].role === 'Admin';
+    const isAdmin = userGroundRes.rows[0].role === "Admin";
 
     if (!isAdmin && record.hunter_id !== userId) {
       throw new Error("Nemáte oprávnenie upravovať tento úlovok.");
     }
 
-    await validateVisitForHunting(userId, record.visit_id, new Date(updates.date_time), isAdmin);
+    const adjustedDateTime = adjustDateIfNeeded(updates.date_time, { fromBrowser: true });
+
+    await validateVisitForHunting(userId, record.visit_id, adjustedDateTime, isAdmin);
 
     const result = await client.query(`
       UPDATE hunting_records
@@ -185,7 +192,7 @@ export async function updateHuntingRecordWithChecks(userId,recordId, updates) {
           date_time = $3
       WHERE id = $4
       RETURNING *
-    `, [updates.animal, updates.weight, updates.date_time, recordId]);
+    `, [updates.animal, updates.weight, adjustedDateTime, recordId]);
 
     await client.query("COMMIT");
     return result.rows[0];

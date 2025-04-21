@@ -1,4 +1,6 @@
 import pool from "../db.js";
+import { adjustDateIfNeeded } from "../utils/adjustDateTime.js"; 
+
 
 export async function getVisitsByUser(userId) {
   return pool.query(`
@@ -82,9 +84,6 @@ export async function getVisitsByFilters(userId, filters) {
 
 
 
-
-
-
 export async function createVisitWithChecks(userId, data) {
   const client = await pool.connect();
   try {
@@ -111,8 +110,9 @@ export async function createVisitWithChecks(userId, data) {
       if (structure.rowCount === 0) throw new Error("Neplatná štruktúra");
     }
 
-    const start = new Date(data.start_datetime);
-    const end = new Date(data.end_datetime);
+    
+    const start = adjustDateIfNeeded(data.start_datetime);
+    const end = data.end_datetime ? adjustDateIfNeeded(data.end_datetime) : null;
     if (end && end <= start) {
       throw new Error("Dátum konca musí byť neskorší ako dátum začiatku.");
     }
@@ -125,8 +125,8 @@ export async function createVisitWithChecks(userId, data) {
         userId,
         data.hunting_area_id,
         data.structure_id || null,
-        data.start_datetime,
-        data.end_datetime || null,
+        start,
+        end,
         data.purpose,
         data.notes || null
       ]
@@ -151,7 +151,7 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
   try {
     await client.query("BEGIN");
 
-    // zisti revír a rolu používateľa
+
     const userGroundRes = await client.query(`
       SELECT hunting_ground_id, role 
       FROM user_hunting_ground 
@@ -161,7 +161,6 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
     if (userGroundRes.rowCount === 0) throw new Error("Používateľ nie je členom žiadneho revíru");
     const { hunting_ground_id, role } = userGroundRes.rows[0];
 
-    // zisti návštevu
     const visitRes = await client.query(`
       SELECT v.*, a.hunting_ground_id 
       FROM visits v
@@ -173,7 +172,6 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
 
     const visit = visitRes.rows[0];
 
-    // kontrola oprávnenia
     if (role !== "Admin" && visit.hunter_id !== userId) {
       throw new Error("Nemáte oprávnenie upravovať túto návštevu.");
     }
@@ -189,7 +187,9 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
       throw new Error("Neplatná oblasť pre tento revír.");
     }
 
-    // kontrola - ak existuje úlovok a účel sa mení alebo meníme čas
+    const start = updates.start_datetime ? adjustDateIfNeeded(updates.start_datetime) : null;
+    const end = updates.end_datetime ? adjustDateIfNeeded(updates.end_datetime) : null;
+
     const records = await client.query(`
       SELECT * FROM hunting_records 
       WHERE visit_id = $1 AND is_deleted = false
@@ -199,24 +199,21 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
       const shotTimes = records.rows.map(r => new Date(r.date_time));
       const minShot = new Date(Math.min(...shotTimes));
       const maxShot = new Date(Math.max(...shotTimes));
-    
-      if (updates.start_datetime && new Date(updates.start_datetime) > minShot) {
+
+      if (start && start > minShot) {
         throw new Error("Začiatok návštevy musí byť pred časom úlovku.");
       }
-    
-      if (updates.end_datetime &&
-          (new Date(visit.start_datetime) > new Date(updates.end_datetime) ||
-           new Date(updates.end_datetime) < minShot ||
-           new Date(updates.end_datetime) < maxShot)) {
-        throw new Error("Úprava konca návštevy by spôsobila nesúlad s časom úlovku.");
+
+      if (end && (start && start > end || end < minShot || end < maxShot)) {
+        throw new Error("Úrava konca návštevy by spôsobila nesülad s časom úlovku.");
       }
-    
+
       if (updates.purpose && updates.purpose !== visit.purpose) {
         throw new Error("Nie je možné meniť účel návštevy, ktorá má úlovok.");
       }
     }
 
-    // vykonanie aktualizácie návštevy
+
     const updated = await client.query(`
       UPDATE visits SET 
         hunting_area_id = $1,
@@ -231,8 +228,8 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
     `, [
       updates.hunting_area_id,
       updates.structure_id || null,
-      updates.start_datetime,
-      updates.end_datetime || null,
+      start,
+      end,
       updates.purpose,
       updates.notes || null,
       visitId
@@ -247,6 +244,7 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
     client.release();
   }
 }
+
 
 
 

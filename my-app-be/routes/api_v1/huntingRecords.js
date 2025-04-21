@@ -26,8 +26,6 @@ router.post("/", verifyToken, async (req, res) => {
   const { visit_id, animal, weight, date_time } = req.body;
 
   try {
-    const shotTime = new Date(date_time);
-    await validateVisitForHunting(userId, visit_id, shotTime);
     const newRecord = await insertHuntingRecord({ visit_id, animal, weight, date_time });
     res.status(201).json(newRecord);
   } catch (err) {
