@@ -1,6 +1,5 @@
 import pool from "../db.js";
-import { adjustDateIfNeeded } from "../utils/adjustDateTime.js"; 
-
+import { adjustDateIfNeeded, getTimeShiftedStartEnd } from "../utils/adjustDateTime.js";
 
 export async function getVisitsByUser(userId) {
   return pool.query(`
@@ -24,9 +23,6 @@ export async function getVisitsByUser(userId) {
     ORDER BY v.start_datetime DESC
   `, [userId]);
 }
-
-
-
 
 export async function getVisitsByFilters(userId, filters) {
   const baseQuery = `
@@ -53,8 +49,12 @@ export async function getVisitsByFilters(userId, filters) {
   const values = [userId];
 
   if (filters.date) {
-    values.push(filters.date);
-    conditions.push(`DATE(v.start_datetime) = $${values.length}`);
+    const { startDate, endDate } = getTimeShiftedStartEnd(filters.date, "day");
+
+    values.push(endDate);
+    conditions.push(`v.start_datetime <= $${values.length}`);
+    values.push(startDate);
+    conditions.push(`(v.end_datetime IS NULL OR v.end_datetime >= $${values.length})`);
   }
 
   if (filters.hunter) {
@@ -79,10 +79,6 @@ export async function getVisitsByFilters(userId, filters) {
   const result = await pool.query(query, values);
   return result.rows;
 }
-
-
-
-
 
 export async function createVisitWithChecks(userId, data) {
   const client = await pool.connect();
@@ -110,7 +106,6 @@ export async function createVisitWithChecks(userId, data) {
       if (structure.rowCount === 0) throw new Error("Neplatná štruktúra");
     }
 
-    
     const start = adjustDateIfNeeded(data.start_datetime);
     const end = data.end_datetime ? adjustDateIfNeeded(data.end_datetime) : null;
     if (end && end <= start) {
@@ -142,15 +137,10 @@ export async function createVisitWithChecks(userId, data) {
   }
 }
 
-
-
-
-
 export async function updateVisitWithChecks(userId, visitId, updates) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-
 
     const userGroundRes = await client.query(`
       SELECT hunting_ground_id, role 
@@ -205,14 +195,13 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
       }
 
       if (end && (start && start > end || end < minShot || end < maxShot)) {
-        throw new Error("Úrava konca návštevy by spôsobila nesülad s časom úlovku.");
+        throw new Error("Úprava konca návštevy by spôsobila nesúlad s časom úlovku.");
       }
 
       if (updates.purpose && updates.purpose !== visit.purpose) {
         throw new Error("Nie je možné meniť účel návštevy, ktorá má úlovok.");
       }
     }
-
 
     const updated = await client.query(`
       UPDATE visits SET 
@@ -245,9 +234,6 @@ export async function updateVisitWithChecks(userId, visitId, updates) {
   }
 }
 
-
-
-
 export async function getPlannedVisits(userId) {
   return pool.query(`
     SELECT v.id, v.start_datetime, v.end_datetime, v.purpose, v.notes,
@@ -263,7 +249,6 @@ export async function getPlannedVisits(userId) {
   `, [userId]);
 }
 
-
 export async function getLastVisit(userId) {
   return pool.query(`
     SELECT v.*, 
@@ -275,20 +260,18 @@ export async function getLastVisit(userId) {
     JOIN hunting_areas a ON v.hunting_area_id = a.id
     LEFT JOIN structures s ON v.structure_id = s.id
     WHERE v.hunter_id = $1
-      AND v.start_datetime < Now()
+      AND v.start_datetime < NOW()
       AND v.is_deleted = false
     ORDER BY v.start_datetime DESC
     LIMIT 1
   `, [userId]);
 }
 
-
 export async function softDeleteVisitAndRecords(userId, visitId) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // Overenie, či je používateľ admin v danom revíri
     const isAdmin = await client.query(`
       SELECT 1
       FROM visits v
@@ -299,17 +282,15 @@ export async function softDeleteVisitAndRecords(userId, visitId) {
 
     if (isAdmin.rowCount === 0) {
       await client.query("ROLLBACK");
-      return false; // nie je admin v revíri – zakázať vymazanie
+      return false;
     }
 
-    // Soft delete úlovkov
     await client.query(`
       UPDATE hunting_records
       SET is_deleted = true
       WHERE visit_id = $1
     `, [visitId]);
 
-    // Soft delete návštevy
     const result = await client.query(`
       UPDATE visits
       SET is_deleted = true

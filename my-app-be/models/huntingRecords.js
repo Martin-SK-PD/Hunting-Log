@@ -1,7 +1,7 @@
 import pool from "../db.js";
-import { adjustDateIfNeeded } from "../utils/adjustDateTime.js";
+import { adjustDateIfNeeded, getTimeShiftedStartEnd } from "../utils/adjustDateTime.js";
 
-export function getHuntingRecordsByUser(userId) {
+export async function getHuntingRecordsByUser(userId) {
   return pool.query(`
     SELECT 
       hr.id, 
@@ -24,17 +24,18 @@ export function getHuntingRecordsByUser(userId) {
   `, [userId]);
 }
 
-
-
 export async function getHuntingRecordsByFilters(userId, filters = {}) {
   const values = [userId];
-  let conditions = [`uhg.user_id = $1`, `hr.is_deleted = false`];
+  const conditions = [`uhg.user_id = $1`, `hr.is_deleted = false`];
 
   if (filters.month) {
-    const [year, m] = filters.month.split("-");
-    values.push(year, m);
-    conditions.push(`EXTRACT(YEAR FROM hr.date_time) = $${values.length - 1}`);
-    conditions.push(`EXTRACT(MONTH FROM hr.date_time) = $${values.length}`);
+    const baseDate = new Date(filters.month + "-01");
+    const { startDate, endDate } = getTimeShiftedStartEnd(baseDate, "month");
+
+    values.push(startDate);
+    conditions.push(`hr.date_time >= $${values.length}`);
+    values.push(endDate);
+    conditions.push(`hr.date_time <= $${values.length}`);
   }
 
   if (filters.hunter) {
@@ -72,8 +73,6 @@ export async function getHuntingRecordsByFilters(userId, filters = {}) {
   return result.rows;
 }
 
-
-
 export async function validateVisitForHunting(userId, visitId, shotTime, isAdmin = false) {
   const params = isAdmin ? [visitId] : [visitId, userId];
   const query = `
@@ -89,20 +88,16 @@ export async function validateVisitForHunting(userId, visitId, shotTime, isAdmin
 
   const visit = result.rows[0];
 
-  const visitStart = new Date(visit.start_datetime);
-  const visitEnd = new Date(visit.end_datetime);
-
-  if (shotTime < visitStart || shotTime > visitEnd) {
+  if (shotTime < new Date(visit.start_datetime) || shotTime > new Date(visit.end_datetime)) {
     throw new Error("Čas úlovku nie je v rozsahu návštevy");
   }
 
   if (shotTime > new Date()) {
-    throw new Error("Čas úlovku nemôže byť v budúncnosti");
+    throw new Error("Čas úlovku nemôže byť v budúcnosti");
   }
 
   return visit;
 }
-
 
 export async function insertHuntingRecord({ visit_id, animal, weight, date_time }) {
   const adjustedDateTime = adjustDateIfNeeded(date_time, { fromBrowser: true });
@@ -119,8 +114,21 @@ export async function insertHuntingRecord({ visit_id, animal, weight, date_time 
   return result.rows[0];
 }
 
-export async function getMonthlyStats(userId) {
-  return pool.query(`
+export async function getMonthlyStats(userId, month) {
+  const values = [userId];
+  const conditions = [`v.hunter_id = $1`, `hr.is_deleted = false`];
+
+  if (month) {
+    const baseDate = new Date(month + "-01");
+    const { startDate, endDate } = getTimeShiftedStartEnd(baseDate, "month");
+
+    values.push(startDate);
+    conditions.push(`hr.date_time >= $${values.length}`);
+    values.push(endDate);
+    conditions.push(`hr.date_time <= $${values.length}`);
+  }
+
+  const result = await pool.query(`
     SELECT 
       animal,
       COUNT(*) AS count_per_animal
@@ -130,12 +138,12 @@ export async function getMonthlyStats(userId) {
       JOIN visits v ON hr.visit_id = v.id
       JOIN hunting_areas a ON v.hunting_area_id = a.id
       JOIN user_hunting_ground uhg ON uhg.hunting_ground_id = a.hunting_ground_id
-      WHERE v.hunter_id = $1
-        AND hr.is_deleted = false
-        AND DATE_TRUNC('month', hr.date_time) = DATE_TRUNC('month', NOW())
+      WHERE ${conditions.join(" AND ")}
     ) sub
     GROUP BY animal
-  `, [userId]);
+  `, values);
+
+  return result.rows;
 }
 
 export async function softDeleteHuntingRecord(userId, recordId) {
@@ -145,7 +153,9 @@ export async function softDeleteHuntingRecord(userId, recordId) {
     WHERE id = $1 AND visit_id IN (
       SELECT v.id
       FROM visits v
-      JOIN user_hunting_ground u ON u.hunting_ground_id = (SELECT hunting_ground_id FROM user_hunting_ground WHERE user_id = $2)
+      JOIN user_hunting_ground u ON u.hunting_ground_id = (
+        SELECT hunting_ground_id FROM user_hunting_ground WHERE user_id = $2
+      )
       WHERE v.id = hunting_records.visit_id
     )
   `, [recordId, userId]);
