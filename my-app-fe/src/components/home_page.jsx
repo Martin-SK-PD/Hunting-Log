@@ -33,23 +33,28 @@ function Home() {
         setFutureVisits(plannedData);
       }
 
-      const statsRes = await fetch("/api/v1/hunting-records/monthly-stats", { headers });
-      const rawStats = await statsRes.json();
-
-      const hunting_counts = {};
-      let total = 0;
-      for (const row of rawStats) {
-        if (row.animal) {
-          const count = Number(row.count_per_animal);
-          hunting_counts[row.animal] = count;
-          total += count;
+      const now = new Date();
+      const monthParam = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  
+      const statsRes = await fetch(`/api/v1/hunting-records/monthly-stats?month=${monthParam}`, { headers });
+      if (statsRes.ok) {
+        const rawStats = await statsRes.json();
+  
+        const hunting_counts = {};
+        let total = 0;
+        for (const row of rawStats) {
+          if (row.animal) {
+            const count = Number(row.count_per_animal);
+            hunting_counts[row.animal] = count;
+            total += count;
+          }
         }
+  
+        setStats({
+          total_hunts: total,
+          hunting_counts,
+        });
       }
-
-      setStats({
-        total_hunts: total,
-        hunting_counts,
-      });
     } catch (err) {
       console.error("Chyba pri načítaní dát:", err);
     }

@@ -37,10 +37,11 @@ router.post("/", verifyToken, async (req, res) => {
 
 router.get("/monthly-stats", verifyToken, async (req, res) => {
   const userId = req.user.id;
+  const month = req.query.month; 
 
   try {
-    const result = await getMonthlyStats(userId);
-    res.json(result.rows);
+    const result = await getMonthlyStats(userId, month);
+    res.json(result);
   } catch (err) {
     console.error("Chyba pri načítaní štatistík:", err.message);
     res.status(500).json({ msg: "Chyba pri načítaní mesačných štatistík" });
