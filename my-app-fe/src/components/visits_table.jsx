@@ -60,8 +60,8 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDele
                 </td>
 
                 <td>{v.purpose}</td>
-                <td>{formatTime(v.start_datetime)}</td>
-                <td>{formatTime(v.end_datetime)}</td>
+                <td>{new Date(v.start_datetime).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })}- {formatTime(v.start_datetime)}</td>
+                <td>{new Date(v.end_datetime).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} - {formatTime(v.end_datetime)}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-outline-secondary me-1"
@@ -77,7 +77,8 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDele
                 <tr key={`expand-${v.id}`}>
                   <td colSpan="8" className="text-start bg-light">
                     <div className="p-2">
-                      <p><strong>Dátum návštevy:</strong> {formatDate(v.start_datetime)}<br />
+                      <p><strong>Dátum návštevy:</strong> {new Date(v.start_datetime).toLocaleDateString("sk-SK")} - {" "}
+                        {new Date(v.end_datetime).toLocaleDateString("sk-SK")} <br />
                         <strong>Čas príchodu:</strong> {formatTime(v.start_datetime)}<br />
                         <strong>Čas odchodu:</strong> {formatTime(v.end_datetime)}<br />
                         <strong>Poznámka: </strong> {v.notes || "-"}</p>
@@ -142,8 +143,14 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDele
                 )}
               </p>
 
-              <p className="mb-1"><strong>Začiatok:</strong> {formatTime(v.start_datetime)}</p>
-              <p className="mb-1"><strong>Koniec:</strong> {formatTime(v.end_datetime)}</p>
+              <p className="mb-1">
+                <strong>Začiatok:</strong>{" "}
+                {new Date(v.start_datetime).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} – {formatTime(v.start_datetime)}
+              </p>
+              <p className="mb-1">
+                <strong>Koniec:</strong>{" "}
+                {new Date(v.end_datetime).toLocaleDateString("sk-SK" , { day: "numeric", month: "numeric" })} – {formatTime(v.end_datetime)}
+              </p>
               {v.notes && <p className="mb-1"><strong>Poznámka:</strong> {v.notes}</p>}
               {v.purpose === "Lov" && user?.id === v.hunter_id && (
                 <button
