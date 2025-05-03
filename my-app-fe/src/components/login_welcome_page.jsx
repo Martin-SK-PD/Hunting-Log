@@ -87,7 +87,7 @@ function Login_welcome_page() {
                     <div className="card my-md-3 m-3 p-2 h-100 text-center">
 
                         <div className="card-body">
-                            <h3 className="text-center font-weight-bold m-2">Polovnicka kniha</h3>
+                            <h3 className="text-center font-weight-bold m-2">Poľovnícka kniha</h3>
                             <p className="text-center p-2">
                             <br/>
                             Vitajte na stránke Poľovnícka kniha.<br /> <br/>
