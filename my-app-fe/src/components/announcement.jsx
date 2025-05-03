@@ -65,29 +65,32 @@ function Announcement_card() {
   };
 
   return (
-    <div className="card scrollable-card my-md-3 m-3 p-2 text-center ">
+    <div className="card scrollable-card my-md-3 m-3 p-2 text-center">
       <div className="card-title pt-2 d-flex justify-content-between align-items-center px-3">
         <h4 className="text-start font-weight-bold m-2">Oznamy</h4>
         {user?.role === "Admin" && (
-          <div className="d-flex align-items-center gap-3">
-            <div className="form-check form-switch">
-              <label className="form-check-label" htmlFor="editSwitch">
-                Režim úprav
-              </label>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="editSwitch"
-                checked={editMode}
-                onChange={() => setEditMode(!editMode)}
-              />
-
-            </div>
-            <button className="btn btn-sm btn-outline-primary" onClick={handleAdd}>+ Pridať</button>
+          <div className="form-check form-switch">
+            <label className="form-check-label" htmlFor="editSwitch">Režim úprav</label>
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id="editSwitch"
+              checked={editMode}
+              onChange={() => setEditMode(!editMode)}
+            />
           </div>
         )}
       </div>
+
       <div className="card-body">
+        {editMode && user?.role === "Admin" && (
+          <div className="mb-3">
+            <button className="btn btn-sm btn-secondary w-100" onClick={handleAdd}>
+              + Pridať oznam
+            </button>
+          </div>
+        )}
+
         <ul className="list-group pt-2">
           {announcements.map((a) => (
             <li className="list-group-item text-start" key={a.id}>
@@ -97,7 +100,7 @@ function Announcement_card() {
                 {"Vytvorené " + new Date(a.created_at).toLocaleString()}
               </small>
               {user?.role === "Admin" && editMode && (
-                <div className="mt-2 d-flex gap-2">
+                <div className="mt-2 d-flex gap-2 flex-wrap">
                   <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(a)}>Upraviť</button>
                   <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(a.id)}>Vymazať</button>
                 </div>
