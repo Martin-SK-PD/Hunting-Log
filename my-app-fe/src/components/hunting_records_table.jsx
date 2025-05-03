@@ -44,7 +44,20 @@ function Hunting_records_table({ records, user, editMode, onEdit, onDelete }) {
                   <td>{i + 1}</td>
                   <td>{r.hunter_name}</td>
                   <td>{r.area_name}</td>
-                  <td>{r.structure_name || "-"}</td>
+
+                  <td>
+                    {r.structure_name ? (
+                      <span
+                        className="d-inline-block"
+                        title={r.structure_notes || ""}
+                      >
+                        {r.structure_name}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+
                   <td>{r.animal}</td>
                   <td>{r.weight} kg</td>
                   <td>{formatDate(r.date_time)}</td>
@@ -98,7 +111,16 @@ function Hunting_records_table({ records, user, editMode, onEdit, onDelete }) {
               </div>
               <div className="card-body">
                 <p className="mb-1"><strong>Oblasť:</strong> {r.area_name}</p>
-                <p className="mb-1"><strong>Štruktúra:</strong> {r.structure_name || "-"}</p>
+                <p className="mb-1">
+                  <strong>Štruktúra:</strong>{" "}
+                  {r.structure_name || "-"}
+                  {r.structure_name && r.structure_notes && (
+                    <>
+                      {" "}
+                      – <span className="text-muted fst-italic">{r.structure_notes}</span>
+                    </>
+                  )}
+                </p>
                 <p className="mb-1"><strong>Váha:</strong> {r.weight} kg</p>
                 <p className="mb-1"><strong>Dátum:</strong> {formatDate(r.date_time)}</p>
                 <p className="mb-1"><strong>Čas:</strong> {formatTime(r.date_time)}</p>

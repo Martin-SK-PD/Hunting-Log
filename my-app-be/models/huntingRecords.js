@@ -59,6 +59,7 @@ export async function getHuntingRecordsByFilters(userId, filters = {}) {
       (u.first_name || ' ' || u.last_name) AS hunter_name,
       a.name AS area_name,
       s.name AS structure_name,
+      s.notes AS structure_notes,
       v.hunter_id
     FROM hunting_records hr
     JOIN visits v ON hr.visit_id = v.id
