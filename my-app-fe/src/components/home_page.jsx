@@ -35,11 +35,11 @@ function Home() {
 
       const now = new Date();
       const monthParam = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  
+
       const statsRes = await fetch(`/api/v1/hunting-records/monthly-stats?month=${monthParam}`, { headers });
       if (statsRes.ok) {
         const rawStats = await statsRes.json();
-  
+
         const hunting_counts = {};
         let total = 0;
         for (const row of rawStats) {
@@ -49,7 +49,7 @@ function Home() {
             total += count;
           }
         }
-  
+
         setStats({
           total_hunts: total,
           hunting_counts,
@@ -88,10 +88,16 @@ function Home() {
             <div className="card-body">
               {lastVisit ? (
                 <>
-                  <h5>{new Date(lastVisit.start_datetime).toLocaleDateString()}</h5>
-
-                  <p className="mb-1">  <strong>Začiatok:</strong> {new Date(lastVisit.start_datetime).toLocaleTimeString()} <br /> </p>
-                  <p className="mb-1">  <strong>Koniec:</strong> {lastVisit.end_datetime ? new Date(lastVisit.end_datetime).toLocaleTimeString() : "Prebieha"} <br /></p>
+                  <p className="mb-1">
+                    <strong>Začiatok:</strong>{" "}
+                    {new Date(lastVisit.start_datetime).toLocaleDateString()} –{" "}
+                    {new Date(lastVisit.start_datetime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                  <p className="mb-1">
+                    <strong>Koniec:</strong>{" "}
+                    {new Date(lastVisit.end_datetime).toLocaleDateString()} –{" "}
+                    {new Date(lastVisit.end_datetime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
                   <p className="mb-1">  <strong>Oblasť:</strong> {lastVisit.area_name} <br /> </p>
                   <p className="mb-1">
                     <strong>Štruktúra:</strong>{" "}

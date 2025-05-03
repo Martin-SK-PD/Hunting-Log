@@ -60,7 +60,7 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDele
                 </td>
 
                 <td>{v.purpose}</td>
-                <td>{new Date(v.start_datetime).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })}- {formatTime(v.start_datetime)}</td>
+                <td>{new Date(v.start_datetime).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} - {formatTime(v.start_datetime)}</td>
                 <td>{new Date(v.end_datetime).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} - {formatTime(v.end_datetime)}</td>
                 <td>
                   <button
