@@ -58,4 +58,22 @@ export async function transferAdminRole(currentAdminId, newAdminId) {
     client.release();
     }
 }
-  
+
+
+
+export async function getUserWithGroundInfo(userId) {
+    
+    const res = await pool.query(
+      `
+      SELECT 
+        u.first_name, u.last_name,
+        hg.name AS ground_name
+      FROM users u
+      JOIN user_hunting_ground uhg ON uhg.user_id = u.id
+      JOIN hunting_grounds hg ON hg.id = uhg.hunting_ground_id
+      WHERE u.id = $1
+      `,
+      [userId]
+    );
+    return res.rows[0] || null;
+}
