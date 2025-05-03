@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "./AuthContext";
 
+
+
+
 function formatTime(iso) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
@@ -42,7 +45,20 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDele
                 <td>{i + 1}</td>
                 <td>{v.hunter_name}</td>
                 <td>{v.area_name}</td>
-                <td>{v.structure_name || "-"}</td>
+
+                <td>
+                  {v.structure_name ? (
+                    <span
+                      className="d-inline-block"
+                      title={v.structure_notes || ""}
+                    >
+                      {v.structure_name}
+                    </span>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+
                 <td>{v.purpose}</td>
                 <td>{formatTime(v.start_datetime)}</td>
                 <td>{formatTime(v.end_datetime)}</td>
@@ -114,7 +130,18 @@ function VisitsTable({ visits, onAddHuntingRecord, onEditVisit, editMode, onDele
             </div>
             <div className="card-body">
               <p className="mb-1"><strong>Oblasť:</strong> {v.area_name}</p>
-              <p className="mb-1"><strong>Štruktúra:</strong> {v.structure_name || "-"}</p>
+
+              <p className="mb-1">
+                <strong>Štruktúra:</strong>{" "}
+                {v.structure_name || "-"}
+                {v.structure_name && v.structure_notes && (
+                  <>
+                    {" "}
+                    – <span className="text-muted fst-italic">{v.structure_notes}</span>
+                  </>
+                )}
+              </p>
+
               <p className="mb-1"><strong>Začiatok:</strong> {formatTime(v.start_datetime)}</p>
               <p className="mb-1"><strong>Koniec:</strong> {formatTime(v.end_datetime)}</p>
               {v.notes && <p className="mb-1"><strong>Poznámka:</strong> {v.notes}</p>}

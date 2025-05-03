@@ -32,6 +32,7 @@ export async function getVisitsByFilters(userId, filters) {
       (u.first_name || ' ' || u.last_name) AS hunter_name,
       a.name AS area_name,
       s.name AS structure_name,
+      s.notes AS structure_notes,
       v.purpose,
       v.start_datetime,
       v.end_datetime,
