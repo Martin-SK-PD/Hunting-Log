@@ -116,14 +116,17 @@ function Navigation() {
           </ul>
 
           {isAuthenticated && (
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item">
-                <button className="btn nav-link" onClick={handleLogout}>
-                  Odhlásiť sa
-                </button>
-              </li>
-            </ul>
+            <div className="ms-auto mt-3 mt-lg-0 border-top pt-2 d-flex flex-column flex-lg-row align-items-start align-items-lg-center ">
+              <span className="me-5 fs-6">
+                {user?.ground_name} – {user?.first_name} {user?.last_name}
+              </span>
+
+              <button className="btn nav-link navbar-text " onClick={handleLogout}>
+                Odhlásiť sa
+              </button>
+            </div>
           )}
+
         </div>
       </div>
     </nav>
