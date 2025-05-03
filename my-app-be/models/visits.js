@@ -255,7 +255,8 @@ export async function getLastVisit(userId) {
     SELECT v.*, 
            (u.first_name || ' ' || u.last_name) AS hunter_name,
            a.name AS area_name,
-           s.name AS structure_name
+           s.name AS structure_name,
+           s.notes AS structure_notes
     FROM visits v
     JOIN users u ON v.hunter_id = u.id
     JOIN hunting_areas a ON v.hunting_area_id = a.id
@@ -267,6 +268,7 @@ export async function getLastVisit(userId) {
     LIMIT 1
   `, [userId]);
 }
+
 
 export async function softDeleteVisitAndRecords(userId, visitId) {
   const client = await pool.connect();

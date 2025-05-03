@@ -89,14 +89,22 @@ function Home() {
               {lastVisit ? (
                 <>
                   <h5>{new Date(lastVisit.start_datetime).toLocaleDateString()}</h5>
-                  <p>
-                    <strong>Začiatok:</strong> {new Date(lastVisit.start_datetime).toLocaleTimeString()} <br />
-                    <strong>Koniec:</strong> {lastVisit.end_datetime ? new Date(lastVisit.end_datetime).toLocaleTimeString() : "Prebieha"} <br />
-                    <strong>Oblasť:</strong> {lastVisit.area_name} <br />
-                    <strong>Štruktúra:</strong> {lastVisit.structure_name || "-"} <br />
-                    <strong>Účel:</strong> {lastVisit.purpose} <br />
-                    <strong>Poznámka:</strong> {lastVisit.notes || "-"}
+
+                  <p className="mb-1">  <strong>Začiatok:</strong> {new Date(lastVisit.start_datetime).toLocaleTimeString()} <br /> </p>
+                  <p className="mb-1">  <strong>Koniec:</strong> {lastVisit.end_datetime ? new Date(lastVisit.end_datetime).toLocaleTimeString() : "Prebieha"} <br /></p>
+                  <p className="mb-1">  <strong>Oblasť:</strong> {lastVisit.area_name} <br /> </p>
+                  <p className="mb-1">
+                    <strong>Štruktúra:</strong>{" "}
+                    {lastVisit.structure_name || "-"}
+                    {lastVisit.structure_name && lastVisit.structure_notes && (
+                      <>
+                        {" "}
+                        – <span className="text-muted fst-italic">{lastVisit.structure_notes}</span>
+                      </>
+                    )}
                   </p>
+                  <p className="mb-1"><strong>Účel:</strong> {lastVisit.purpose} <br /> </p>
+                  <p className="mb-1"><strong>Poznámka:</strong> {lastVisit.notes || "-"}</p>
 
                   <div className="mt-3">
                     {lastVisit.purpose === "Lov" && (
