@@ -97,10 +97,10 @@ function Hunting_log() {
                     onChange={(val) => setFilters((prev) => ({ ...prev, month: val }))}
                   />
                 </div>
-                <div className="col-md-2 text-md-end">
+                <div className="col-md-4 text-md-end">
                   {user?.role === "Admin" && (
-                    <div className="my-2 me-2 text-md-end">
-                      <label className="me-2" htmlFor="mazat">Režim mazania: </label>
+                    <div className="my-2 me-2 form-check form-switch d-inline-block">
+                      <label className="me-2" htmlFor="mazat">Povoliť mazanie</label>
                       <input
                         className="form-check-input"
                         type="checkbox"

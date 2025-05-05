@@ -115,17 +115,19 @@ function Visits_log() {
                     onChange={(newDate) => setFilters((prev) => ({ ...prev, date: newDate }))}
                   />
                 </div>
-                <div className="col-md-2">
+                <div className="col-md-2 mb-2 mb-md-0">
                   {user?.role === "Admin" && (
-                    <div className="my-2 me-2 text-md-end">
-                      <label className="me-2" htmlFor="mazat">Povoliť mazanie</label>
+                    <div className="form-check form-switch d-flex align-items-center">
                       <input
-                        className="form-check-input"
+                        className="form-check-input me-2"
                         type="checkbox"
                         id="mazat"
                         checked={editMode}
                         onChange={() => setEditMode(!editMode)}
                       />
+                      <label className="form-check-label" htmlFor="mazat">
+                        Povoliť mazanie
+                      </label>
                     </div>
                   )}
                 </div>

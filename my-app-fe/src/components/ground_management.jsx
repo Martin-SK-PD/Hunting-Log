@@ -154,10 +154,10 @@ function GroundManagement() {
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <h5 className="mb-0">{area.name}</h5>
                         <div className="d-flex gap-1">
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleEditArea(area)}>
+                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleEditArea(area)}>
                             Upraviť
                           </button>
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleDeleteArea(area.id)}>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteArea(area.id)}>
                             Vymazať
                           </button>
                         </div>
@@ -174,10 +174,10 @@ function GroundManagement() {
                               <li key={s.id} className="list-group-item d-flex justify-content-between align-items-center py-1">
                                 {s.name}
                                 <div className="d-flex gap-1">
-                                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleEditStructure(s, area.id)}>
+                                  <button className="btn btn-sm btn-outline-primary" onClick={() => handleEditStructure(s, area.id)}>
                                     Upraviť
                                   </button>
-                                  <button className="btn btn-sm btn-outline-primary" onClick={() => handleDeleteStructure(s.id, area.id)}>
+                                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteStructure(s.id, area.id)}>
                                     Vymazať
                                   </button>
                                 </div>
