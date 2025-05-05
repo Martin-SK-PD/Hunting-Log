@@ -39,18 +39,15 @@ function Hunting_records_table({ records, user, editMode, onEdit, onDelete }) {
           <tbody>
             {records.map((r, i) => {
               const canAccess = user.role === "Admin" || user.id === r.hunter_id;
-              return [
+              return (
                 <tr key={`main-${r.id}`}>
-                  <td>{i + 1}</td>
-                  <td>{r.hunter_name}</td>
-                  <td>{r.area_name}</td>
+                  <td className="align-middle" >{i + 1}</td>
+                  <td className="align-middle" >{r.hunter_name}</td>
+                  <td className="align-middle" >{r.area_name}</td>
 
-                  <td>
+                  <td className="align-middle" >
                     {r.structure_name ? (
-                      <span
-                        className="d-inline-block"
-                        title={r.structure_notes || ""}
-                      >
+                      <span className="d-inline-block" title={r.structure_notes || ""}>
                         {r.structure_name}
                       </span>
                     ) : (
@@ -58,42 +55,26 @@ function Hunting_records_table({ records, user, editMode, onEdit, onDelete }) {
                     )}
                   </td>
 
-                  <td>{r.animal}</td>
-                  <td>{r.weight} kg</td>
-                  <td>{formatDate(r.date_time)}</td>
-                  <td>{formatTime(r.date_time)}</td>
-                  <td>
+                  <td className="align-middle" >{r.animal}</td>
+                  <td className="align-middle" >{r.weight} kg</td>
+                  <td className="align-middle" >{formatDate(r.date_time)}</td>
+                  <td className="align-middle" >{formatTime(r.date_time)}</td>
+                  <td className="align-middle" >
                     {canAccess && (
-                      <button
-                        className="btn btn-sm btn-outline-secondary me-1"
-                        onClick={() => toggleRow(r.id)}
-                      >
-                        {expandedRows.includes(r.id) ? "Skryť" : "Detaily"}
-                      </button>
+                      <div className="d-flex flex-wrap justify-content-center gap-2">
+                        <button className="btn btn-sm btn-outline-primary" onClick={() => onEdit(r)}>
+                          Upraviť
+                        </button>
+                        {editMode && user.role === "Admin" && (
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(r)}>
+                            Vymazať
+                          </button>
+                        )}
+                      </div>
                     )}
                   </td>
-                </tr>,
-
-                expandedRows.includes(r.id) && canAccess && (
-                  <tr key={`expand-${r.id}`}>
-                    <td colSpan="9" className="text-start bg-light">
-                      <div className="p-2">
-                        <div className="mt-1 d-flex flex-wrap gap-2">
-                          <button
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => onEdit(r)}
-                          >
-                            Upraviť
-                          </button>
-                          {editMode && user?.role === "Admin" && (
-                            <button className="btn btn-sm btn-danger" onClick={() => onDelete(r)}>Vymazať</button>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              ];
+                </tr>
+              );
             })}
           </tbody>
         </table>
