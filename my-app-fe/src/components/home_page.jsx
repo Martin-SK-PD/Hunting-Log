@@ -153,7 +153,7 @@ function Home() {
                     <li key={v.id} className="list-group-item d-flex justify-content-between align-items-center">
                       <div>
                         <strong>{new Date(v.start_datetime).toLocaleDateString()} </strong>
-                        {formatTime(v.start_datetime)} - {formatTime(v.end_datetime)}<br />
+                        {formatTime(v.start_datetime)}<br />
                         <span className="text-muted">{v.purpose} – {v.area_name}</span>
                       </div>
                     </li>
